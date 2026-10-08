@@ -1,5 +1,5 @@
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Car, Clock, Home, Plate, Plus, User, Warn } from './icons'
+import { Car, Clock, Home, List, Plate, Plus, User, Warn } from './icons'
 import { days, fmtS, isLate } from './util'
 
 type Props = {
@@ -9,10 +9,11 @@ type Props = {
   onPreter: (v: Vehicule) => void
   onVoir: (p: Pret) => void
   onAjouter: () => void
+  onParc: () => void
   onMoi: () => void
 }
 
-export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
+export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onParc, onMoi }: Props) {
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   // En retard, puis prêtées (la plus ancienne d'abord), puis dispo
   const rank = (v: Vehicule) => {
@@ -36,9 +37,15 @@ export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi
       <header>
         <div className="eyebrow">
           <span>{today} · voitures de prêt</span>
-          <button className="me" onClick={onMoi} aria-label={'Connecté : ' + data.moi + '. Changer'}>
-            {data.moi}
-          </button>
+          <span className="top-btns">
+            <button className="pill" onClick={onParc} aria-label="Le parc : toutes les voitures">
+              <List />
+              Parc
+            </button>
+            <button className="me" onClick={onMoi} aria-label={'Connecté : ' + data.moi + '. Changer'}>
+              {data.moi}
+            </button>
+          </span>
         </div>
         <h1>Qui a quoi ?</h1>
         <div className="counts">
@@ -55,10 +62,13 @@ export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi
           const p = actifs.get(v.id)
           return p ? <Out key={v.id} v={v} p={p} onClick={() => onVoir(p)} /> : <Dispo key={v.id} v={v} onClick={() => onPreter(v)} />
         })}
-        <button className="tile add" onClick={onAjouter}>
-          <Plus />
-          {vs.length ? 'Ajouter une voiture' : 'Ajouter la première voiture'}
-        </button>
+        {/* Ajouter une voiture se fait dans « Le parc » ; ici seulement tant que le parc est vide */}
+        {vs.length === 0 && (
+          <button className="tile add" onClick={onAjouter}>
+            <Plus />
+            Ajouter la première voiture
+          </button>
+        )}
       </div>
     </main>
   )

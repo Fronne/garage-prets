@@ -83,3 +83,18 @@ export const Plate = ({ immat }: { immat: string | null }) =>
       <span>{immat}</span>
     </span>
   ) : null
+export const List = () => (
+  <S sm>
+    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+  </S>
+)
+export const Back = () => (
+  <S>
+    <path d="M15 18l-6-6 6-6" />
+  </S>
+)
+export const Chevron = () => (
+  <S sm>
+    <path d="M9 18l6-6-6-6" />
+  </S>
+)

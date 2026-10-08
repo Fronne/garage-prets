@@ -65,6 +65,7 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
               <Check />
               {v ? 'Enregistrer' : 'Ajouter la voiture'}
             </button>
+            {v && !onRetirer && <p className="auto">Elle est prêtée en ce moment : tu pourras la retirer une fois rendue.</p>}
             {onRetirer && (
               <button
                 type="button"

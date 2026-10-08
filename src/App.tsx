@@ -3,6 +3,7 @@ import type { Pret, SyncData, Vehicule } from '../shared/types'
 import { api, ApiError, errorText, getToken, setToken } from './api'
 import { Board } from './Board'
 import { Login } from './Login'
+import { Parc } from './Parc'
 import { emptyDraft, PretSheet, type Draft } from './PretSheet'
 import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
@@ -47,6 +48,13 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   const [sheet, setSheet] = useState<SheetState>(null)
   const [toast, setToast] = useState<Toast>(null)
   const [first, setFirst] = useState(true)
+  // « Le parc » est une page à part : le bouton retour du téléphone ramène à l'accueil
+  const [parc, setParc] = useState(false)
+  useEffect(() => {
+    const onPop = () => setParc(!!history.state?.parc)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
   const drafts = useRef<Record<string, Draft>>({})
   const toastTimer = useRef<ReturnType<typeof setTimeout>>()
   // Pendant un enregistrement, une synchronisation en cours ne doit pas écraser ce qu'on vient de faire
@@ -216,24 +224,38 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         v={v}
         onClose={close}
         onSave={(nom, immat) => saveVehicule(v, nom, immat)}
-        onRetirer={v && (() => retirer(v))}
+        onRetirer={v && !data.prets.some((p) => p.vehicule_id === v.id && !p.retour) ? () => retirer(v) : undefined}
       />
     )
   }
 
   return (
     <>
-      <Board
-        data={data}
-        offline={offline}
-        first={first}
-        onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
-        onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
-        onAjouter={() => setSheet({ kind: 'vehicule' })}
-        onMoi={() => {
-          if (confirm(`Connecté en tant que ${data.moi}. Changer de personne sur ce téléphone ?`)) onLogout()
-        }}
-      />
+      {parc ? (
+        <Parc
+          data={data}
+          onBack={() => history.back()}
+          onAjouter={() => setSheet({ kind: 'vehicule' })}
+          onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
+        />
+      ) : (
+        <Board
+          data={data}
+          offline={offline}
+          first={first}
+          onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
+          onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
+          onAjouter={() => setSheet({ kind: 'vehicule' })}
+          onParc={() => {
+            history.pushState({ parc: true }, '')
+            setParc(true)
+            window.scrollTo(0, 0)
+          }}
+          onMoi={() => {
+            if (confirm(`Connecté en tant que ${data.moi}. Changer de personne sur ce téléphone ?`)) onLogout()
+          }}
+        />
+      )}
       {sheetEl}
       <div role="status" aria-live="polite">
         {toast && (

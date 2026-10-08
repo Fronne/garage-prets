@@ -27,6 +27,9 @@ button:disabled { opacity: 0.6 }
 header { display: flex; flex-direction: column; gap: 8px }
 .eyebrow { font-size: 0.875rem; font-weight: 500; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; align-items: center }
 .eyebrow span::first-letter { text-transform: uppercase }
+.top-btns { display: flex; align-items: center; gap: 4px; flex: none }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--slate); font-size: 0.8125rem; font-weight: 600; cursor: pointer; box-shadow: var(--shadow) }
+.pill svg { width: 16px; height: 16px }
 .me { border: 0; background: none; color: var(--muted); font-size: 0.875rem; font-weight: 600; min-height: 44px; padding: 0 0 0 8px; cursor: pointer }
 h1 { margin: 0; font-size: 1.875rem; font-weight: 800; letter-spacing: -0.01em; line-height: 1.05 }
 .counts { display: flex; flex-wrap: wrap; gap: 8px }
@@ -157,3 +160,17 @@ label.q { font-size: 1.25rem; font-weight: 800 }
   @keyframes rise { from { opacity: 0.4; transform: translateY(6px) } }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+
+/* Écran « Le parc » */
+.back { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; min-height: 44px; margin-left: -8px; padding: 0 12px 0 4px; border: 0; background: none; color: var(--muted); font-size: 0.9375rem; font-weight: 600; cursor: pointer }
+.parc { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden }
+.parc li + li { border-top: 1px solid var(--line) }
+.parc button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; border: 0; background: none; text-align: left; cursor: pointer; font: inherit }
+.parc button:active { transform: none; background: var(--bg) }
+.parc .ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none }
+.parc .ico svg { width: 24px; height: 24px; stroke-width: 1.6 }
+.parc .t-ok { background: var(--ok-bg); color: var(--ok) } .parc .t-out { background: var(--out-bg); color: var(--out) } .parc .t-late { background: var(--late-soft); color: var(--late) }
+.pc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px }
+.pc-nm { font-weight: 700; font-size: 1.0625rem; overflow-wrap: anywhere }
+.pc-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.875rem; color: var(--muted) }
+.parc button > svg { color: var(--muted) }
