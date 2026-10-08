@@ -7,6 +7,7 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 export function Sheet({ onClose, children }: { onClose: () => void; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false)
   const back = useRef<Element | null>(document.activeElement)
+  const sheetRef = useRef<HTMLDivElement>(null)
 
   const close = () => {
     if (closing) return
@@ -22,6 +23,12 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Le focus va sur la fenêtre elle-même, pas sur un champ : le clavier ne s'ouvre que si on touche un champ
+  useEffect(() => {
+    const el = sheetRef.current
+    if (el && !el.contains(document.activeElement)) el.focus({ preventScroll: true })
   }, [])
 
   // Rend le focus à la carte d'origine seulement à la fermeture, pas à chaque mise à jour (sinon le clavier se ferme à chaque lettre)
@@ -50,7 +57,7 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
 
   return (
     <div className={'scrim' + (closing ? ' closing' : '')} onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div ref={sheetRef} tabIndex={-1} className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
         <div className="grab" aria-hidden="true" />
         {children(close)}
       </div>

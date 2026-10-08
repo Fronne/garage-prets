@@ -102,7 +102,6 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
               value={d.client}
               onChange={(e) => set({ client: e.target.value })}
               aria-describedby="err"
-              autoFocus={!pret}
             />
             <div className="err" id="err" role="alert">
               {err}

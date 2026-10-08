@@ -98,6 +98,7 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .cta.ok { background: var(--done); color: var(--on-ok) }
 /* Le bouton principal reste visible en bas de la fenêtre, même quand le clavier en réduit la hauteur */
 .sheet { scroll-padding-bottom: 96px }
+.sheet:focus { outline: none }
 .sheet .cta { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 -12px 0 0 var(--surface), 0 8px 0 0 var(--surface) }
 /* Clavier ouvert : écran bas, on resserre */
 @media (max-height: 560px) {
