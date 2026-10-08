@@ -9,7 +9,8 @@ import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
-import { Car, List } from './icons'
+import { Car, Clock, List } from './icons'
+import { Historique } from './Historique'
 
 const CACHE_KEY = 'garage.cache'
 const POLL_MS = 15_000
@@ -20,6 +21,8 @@ type SheetState =
   | { kind: 'vehicule'; vid?: string }
   | { kind: 'moi' }
   | null
+
+type Page = 'prets' | 'parc' | 'histo'
 
 type Toast = { msg: string; undo?: () => void; error?: boolean } | null
 
@@ -51,10 +54,10 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   const [sheet, setSheet] = useState<SheetState>(null)
   const [toast, setToast] = useState<Toast>(null)
   const [first, setFirst] = useState(true)
-  // « Le parc » est une page à part : le bouton retour du téléphone ramène à l'accueil
-  const [parc, setParc] = useState(false)
+  // « Le parc » et « Historique » sont des pages à part : le bouton retour du téléphone ramène à l'accueil
+  const [page, setPage] = useState<Page>('prets')
   useEffect(() => {
-    const onPop = () => setParc(!!history.state?.parc)
+    const onPop = () => setPage(history.state?.page ?? 'prets')
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
@@ -182,6 +185,15 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     })
   }
 
+  function aller(id: Page) {
+    if (id === page) return
+    if (id === 'prets') return history.back()
+    if (page === 'prets') history.pushState({ page: id }, '')
+    else history.replaceState({ page: id }, '')
+    setPage(id)
+    window.scrollTo(0, 0)
+  }
+
   const close = () => setSheet(null)
   let sheetEl = null
   if (sheet?.kind === 'preter') {
@@ -236,13 +248,15 @@ function Garage({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      {parc ? (
+      {page === 'parc' ? (
         <Parc
           data={data}
           onMoi={() => setSheet({ kind: 'moi' })}
           onAjouter={() => setSheet({ kind: 'vehicule' })}
           onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
         />
+      ) : page === 'histo' ? (
+        <Historique moi={data.moi} onMoi={() => setSheet({ kind: 'moi' })} />
       ) : (
         <Board
           data={data}
@@ -254,24 +268,20 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           onMoi={() => setSheet({ kind: 'moi' })}
         />
       )}
-      {/* Barre du bas : les prêts (accueil) et le parc */}
+      {/* Barre du bas. L'accueil reste au fond de l'historique du téléphone : retour depuis une autre page y ramène */}
       <nav className="tabs" aria-label="Pages">
-        <button aria-current={parc ? undefined : 'page'} onClick={() => parc && history.back()}>
-          <Car />
-          Prêts
-        </button>
-        <button
-          aria-current={parc ? 'page' : undefined}
-          onClick={() => {
-            if (parc) return
-            history.pushState({ parc: true }, '')
-            setParc(true)
-            window.scrollTo(0, 0)
-          }}
-        >
-          <List />
-          Parc
-        </button>
+        {(
+          [
+            ['prets', <Car key="i" />, 'Prêts'],
+            ['parc', <List key="i" />, 'Parc'],
+            ['histo', <Clock key="i" />, 'Historique'],
+          ] as const
+        ).map(([id, icon, label]) => (
+          <button key={id} aria-current={page === id ? 'page' : undefined} onClick={() => aller(id)}>
+            {icon}
+            {label}
+          </button>
+        ))}
       </nav>
       {sheetEl}
       <div role="status" aria-live="polite">

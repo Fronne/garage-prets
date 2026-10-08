@@ -27,3 +27,6 @@ export interface SyncData {
   vehicules: Vehicule[]
   prets: Pret[]
 }
+
+/** Ligne de l'historique : le prêt avec le nom et la plaque de sa voiture */
+export type LigneHisto = Omit<Pret, 'photo_depart' | 'photo_retour'> & { nom: string; immat: string | null }

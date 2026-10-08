@@ -113,6 +113,35 @@ app.get('/api/sync', async (c) => {
   return c.json({ moi: c.get('prenom'), vehicules: vehicules.results, prets: prets.results } satisfies SyncData)
 })
 
+// Historique complet, voitures retirées comprises : pour retrouver qui avait une voiture (PV, amende).
+// « de » et « a » (ISO) : prêts qui chevauchent cette période ; « q » : plaque, voiture ou client.
+app.get('/api/historique', async (c) => {
+  const de = c.req.query('de')
+  const a = c.req.query('a')
+  const q = (c.req.query('q') ?? '').trim().slice(0, 40)
+  const where: string[] = []
+  const args: string[] = []
+  if (de && a) {
+    where.push('p.depart <= ? AND (p.retour IS NULL OR p.retour >= ?)')
+    args.push(a, de)
+  }
+  if (q) {
+    const plaque = q.toUpperCase().replace(/[^A-Z0-9]/g, '')
+    where.push(
+      "(p.client LIKE ? OR v.nom LIKE ?" + (plaque ? " OR REPLACE(REPLACE(UPPER(IFNULL(v.immat, '')), '-', ''), ' ', '') LIKE ?" : '') + ')',
+    )
+    args.push('%' + q + '%', '%' + q + '%', ...(plaque ? ['%' + plaque + '%'] : []))
+  }
+  const rows = await c.env.DB.prepare(
+    `SELECT p.id, p.vehicule_id, p.client, p.tel, p.note, p.depart, p.retour_prevu, p.retour, p.par, v.nom, v.immat
+     FROM prets p JOIN vehicules v ON v.id = p.vehicule_id
+     ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY p.depart DESC LIMIT 300`,
+  )
+    .bind(...args)
+    .all()
+  return c.json(rows.results)
+})
+
 // ---------- Voitures ----------
 
 app.post('/api/vehicules', async (c) => {
