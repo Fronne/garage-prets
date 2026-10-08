@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
 import { Cal, Check, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
@@ -39,6 +39,12 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
   const clientRef = useRef<HTMLInputElement>(null)
+  const ctaRef = useRef<HTMLButtonElement>(null)
+
+  // Quand une option se déplie, la fenêtre descend pour la montrer en entier (ce qui est juste au-dessus du bouton du bas)
+  useEffect(() => {
+    if (d.open) requestAnimationFrame(() => ctaRef.current?.previousElementSibling?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
+  }, [d.open])
 
   // Le brouillon survit à la fermeture de la fenêtre : le nom tapé revient à la réouverture
   const set = (patch: Partial<Draft>) =>
@@ -162,7 +168,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 />
               </>
             )}
-            <button className="cta" type="submit">
+            <button ref={ctaRef} className="cta" type="submit">
               <Check />
               {pret ? 'Enregistrer' : 'Prêter la ' + v.nom}
             </button>
