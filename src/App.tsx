@@ -9,6 +9,7 @@ import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
+import { Car, List } from './icons'
 
 const CACHE_KEY = 'garage.cache'
 const POLL_MS = 15_000
@@ -238,7 +239,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       {parc ? (
         <Parc
           data={data}
-          onBack={() => history.back()}
+          onMoi={() => setSheet({ kind: 'moi' })}
           onAjouter={() => setSheet({ kind: 'vehicule' })}
           onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
         />
@@ -250,14 +251,28 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
           onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
           onAjouter={() => setSheet({ kind: 'vehicule' })}
-          onParc={() => {
+          onMoi={() => setSheet({ kind: 'moi' })}
+        />
+      )}
+      {/* Barre du bas : les prêts (accueil) et le parc */}
+      <nav className="tabs" aria-label="Pages">
+        <button aria-current={parc ? undefined : 'page'} onClick={() => parc && history.back()}>
+          <Car />
+          Prêts
+        </button>
+        <button
+          aria-current={parc ? 'page' : undefined}
+          onClick={() => {
+            if (parc) return
             history.pushState({ parc: true }, '')
             setParc(true)
             window.scrollTo(0, 0)
           }}
-          onMoi={() => setSheet({ kind: 'moi' })}
-        />
-      )}
+        >
+          <List />
+          Parc
+        </button>
+      </nav>
       {sheetEl}
       <div role="status" aria-live="polite">
         {toast && (

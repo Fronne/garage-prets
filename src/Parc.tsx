@@ -1,26 +1,28 @@
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Back, Chevron, Plate, Plus } from './icons'
+import { Avatar } from './Board'
+import { Chevron, Plate, Plus } from './icons'
 import { Logo } from './Logo'
 import { isLate } from './util'
 
-type Props = { data: SyncData; onBack: () => void; onAjouter: () => void; onModifier: (v: Vehicule) => void }
+type Props = { data: SyncData; onMoi: () => void; onAjouter: () => void; onModifier: (v: Vehicule) => void }
 
 // Toutes les voitures du garage : on y ajoute, renomme ou retire une voiture (rare, donc hors de l'accueil)
-export function Parc({ data, onBack, onAjouter, onModifier }: Props) {
+export function Parc({ data, onMoi, onAjouter, onModifier }: Props) {
   const actifs = new Map<string, Pret>(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   const vs = data.vehicules.slice().sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
   return (
     <main className="wrap">
       <header>
-        <button className="back" onClick={onBack}>
-          <Back />
-          Retour
-        </button>
-        <h1>Le parc</h1>
-        <p className="auto">
-          {vs.length} voiture{vs.length > 1 ? 's' : ''} de prêt
-        </p>
+        <div className="hd">
+          <div className="hd-t">
+            <span className="eyebrow">
+              {vs.length} voiture{vs.length > 1 ? 's' : ''} de prêt
+            </span>
+            <h1>Le parc</h1>
+          </div>
+          <Avatar moi={data.moi} onClick={onMoi} />
+        </div>
       </header>
       <button className="cta" onClick={onAjouter}>
         <Plus />

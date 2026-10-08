@@ -1,5 +1,5 @@
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Clock, Home, List, Plate, Plus, User, Warn } from './icons'
+import { Clock, Home, Plate, Plus, User, Warn } from './icons'
 import { Logo } from './Logo'
 import { days, fmtS, isLate } from './util'
 
@@ -10,11 +10,10 @@ type Props = {
   onPreter: (v: Vehicule) => void
   onVoir: (p: Pret) => void
   onAjouter: () => void
-  onParc: () => void
   onMoi: () => void
 }
 
-export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onParc, onMoi }: Props) {
+export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   // En retard, puis prêtées (la plus ancienne d'abord), puis dispo
   const rank = (v: Vehicule) => {
@@ -36,19 +35,13 @@ export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onPar
   return (
     <main className="wrap">
       <header>
-        <div className="eyebrow">
-          <span>{today} · voitures de prêt</span>
-          <span className="top-btns">
-            <button className="pill" onClick={onParc} aria-label="Le parc : toutes les voitures">
-              <List />
-              Parc
-            </button>
-            <button className="me" onClick={onMoi} aria-label={'Connecté : ' + data.moi + '. Changer'}>
-              {data.moi}
-            </button>
-          </span>
+        <div className="hd">
+          <div className="hd-t">
+            <span className="eyebrow">{today}</span>
+            <h1>Voitures de prêt</h1>
+          </div>
+          <Avatar moi={data.moi} onClick={onMoi} />
         </div>
-        <h1>Qui a quoi ?</h1>
         <div className="counts">
           <span className="count c-ok">{vs.length - nOut} dispo</span>
           <span className="count c-out">
@@ -72,6 +65,15 @@ export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onPar
         )}
       </div>
     </main>
+  )
+}
+
+// Rond avec l'initiale de la personne connectée, en haut à droite
+export function Avatar({ moi, onClick }: { moi: string; onClick: () => void }) {
+  return (
+    <button className="avatar" onClick={onClick} aria-label={'Connecté : ' + moi + '. Changer de personne'}>
+      {moi.trim().charAt(0).toUpperCase()}
+    </button>
   )
 }
 
