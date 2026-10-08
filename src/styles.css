@@ -260,3 +260,12 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 @media (prefers-reduced-motion: no-preference) { .cal { animation: up 180ms var(--ease) } .cal-scrim { animation: fade 180ms var(--ease) } }
 /* Fenêtre longue : elle défile au lieu d'écraser son contenu (la plaque était tassée) */
 .sheet > * { flex-shrink: 0 }
+
+/* Changement d'onglet : la page arrive du côté où l'on glisse */
+@media (prefers-reduced-motion: no-preference) {
+  .page.from-d { animation: from-d 220ms var(--ease) }
+  .page.from-g { animation: from-g 220ms var(--ease) }
+  @keyframes from-d { from { opacity: 0; transform: translateX(32px) } }
+  @keyframes from-g { from { opacity: 0; transform: translateX(-32px) } }
+}
+html, body { overflow-x: hidden; overscroll-behavior-x: none }

@@ -24,6 +24,7 @@ type SheetState =
   | null
 
 type Page = 'prets' | 'parc' | 'histo'
+const PAGES: Page[] = ['prets', 'parc', 'histo']
 
 type Toast = { msg: string; undo?: () => void; error?: boolean } | null
 
@@ -56,7 +57,16 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   const [toast, setToast] = useState<Toast>(null)
   const [first, setFirst] = useState(true)
   // « Le parc » et « Historique » sont des pages à part : le bouton retour du téléphone ramène à l'accueil
-  const [page, setPage] = useState<Page>('prets')
+  const [page, setPageRaw] = useState<Page>('prets')
+  // Sens de l'animation : la nouvelle page arrive par la droite si elle est après dans la barre du bas
+  const [sens, setSens] = useState<'g' | 'd' | ''>('')
+  const pageRef = useRef(page)
+  const setPage = (p: Page) => {
+    if (p === pageRef.current) return
+    setSens(PAGES.indexOf(p) > PAGES.indexOf(pageRef.current) ? 'd' : 'g')
+    pageRef.current = p
+    setPageRaw(p)
+  }
   useEffect(() => {
     const onPop = () => {
       // Retour du téléphone avec une fenêtre ouverte : on remet l'étape et la fenêtre décide (fermer, ou demander s'il faut enregistrer)
@@ -151,6 +161,36 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  // Glisser le doigt à gauche ou à droite change d'onglet (pas depuis le bord de l'écran : c'est le geste retour d'Android)
+  const allerRef = useRef<(id: Page) => void>(() => {})
+  useEffect(() => {
+    let start: { x: number; y: number; t: number } | null = null
+    const down = (e: TouchEvent) => {
+      const t = e.touches[0]
+      const bord = t.clientX < 30 || t.clientX > window.innerWidth - 30
+      // Pas dans une fenêtre ou le calendrier
+      const dansFenetre = e.target instanceof Element && !!e.target.closest('.scrim, .cal-scrim')
+      start = e.touches.length === 1 && !bord && !dansFenetre && !sheetOpen.current ? { x: t.clientX, y: t.clientY, t: Date.now() } : null
+    }
+    const up = (e: TouchEvent) => {
+      const s0 = start
+      start = null
+      if (!s0 || sheetOpen.current) return
+      const t = e.changedTouches[0]
+      const dx = t.clientX - s0.x
+      const dy = t.clientY - s0.y
+      if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - s0.t > 700) return
+      const i = PAGES.indexOf(pageRef.current) + (dx < 0 ? 1 : -1)
+      if (i >= 0 && i < PAGES.length) allerRef.current(PAGES[i])
+    }
+    document.addEventListener('touchstart', down, { passive: true })
+    document.addEventListener('touchend', up, { passive: true })
+    return () => {
+      document.removeEventListener('touchstart', down)
+      document.removeEventListener('touchend', up)
+    }
+  }, [])
+
   if (!data) {
     return (
       <main className="wrap">
@@ -220,10 +260,12 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     })
   }
 
+  allerRef.current = aller
+
   function aller(id: Page) {
-    if (id === page) return
+    if (id === pageRef.current) return
     if (id === 'prets') return history.back()
-    if (page === 'prets') history.pushState({ page: id }, '')
+    if (pageRef.current === 'prets') history.pushState({ page: id }, '')
     else history.replaceState({ page: id }, '')
     setPage(id)
     window.scrollTo(0, 0)
@@ -283,27 +325,29 @@ function Garage({ onLogout }: { onLogout: () => void }) {
 
   return (
     <>
-      {page === 'parc' ? (
-        <Parc
-          data={data}
-          onMoi={() => setSheet({ kind: 'moi' })}
-          onAjouter={() => setSheet({ kind: 'vehicule' })}
-          onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
-        />
-      ) : page === 'histo' ? (
-        <Historique moi={data.moi} onMoi={() => setSheet({ kind: 'moi' })} />
-      ) : (
-        <Board
-          data={data}
-          offline={offline}
-          attente={attente}
-          first={first}
-          onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
-          onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
-          onAjouter={() => setSheet({ kind: 'vehicule' })}
-          onMoi={() => setSheet({ kind: 'moi' })}
-        />
-      )}
+      <div key={page} className={'page' + (sens ? ' from-' + sens : '')}>
+        {page === 'parc' ? (
+          <Parc
+            data={data}
+            onMoi={() => setSheet({ kind: 'moi' })}
+            onAjouter={() => setSheet({ kind: 'vehicule' })}
+            onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
+          />
+        ) : page === 'histo' ? (
+          <Historique moi={data.moi} onMoi={() => setSheet({ kind: 'moi' })} />
+        ) : (
+          <Board
+            data={data}
+            offline={offline}
+            attente={attente}
+            first={first}
+            onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
+            onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
+            onAjouter={() => setSheet({ kind: 'vehicule' })}
+            onMoi={() => setSheet({ kind: 'moi' })}
+          />
+        )}
+      </div>
       {/* Barre du bas. L'accueil reste au fond de l'historique du téléphone : retour depuis une autre page y ramène */}
       <nav className="tabs" aria-label="Pages">
         {(
