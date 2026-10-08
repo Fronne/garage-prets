@@ -53,7 +53,7 @@ npm run dev
 1. `npx wrangler login` (compte Cloudflare).
 2. `npm run db:remote` : crée les tables dans la base `garage-prets` (déjà créée sur Cloudflare).
 3. `npx wrangler secret put GARAGE_CODE` : choisir le code que le garage tapera une fois sur chaque téléphone.
-4. `npm run deploy` : le site est en ligne sur https://garage-prets.cyril-apps.workers.dev.
+4. `npm run deploy` : le site est en ligne sur https://garage-prets.handy-apps.workers.dev.
 
 Quand une migration est ajoutée, lancer `npm run db:remote` avant `npm run deploy`.
 

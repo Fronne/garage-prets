@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   appName: 'Prêts',
   webDir: 'dist',
   server: {
-    url: 'https://garage-prets.cyril-apps.workers.dev',
+    url: 'https://garage-prets.handy-apps.workers.dev',
   },
   android: {
     adjustMarginsForEdgeToEdge: 'auto',
