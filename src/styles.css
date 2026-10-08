@@ -96,6 +96,20 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .opt[aria-expanded='true'] { border-color: var(--ink) }
 .cta { min-height: 64px; border: 0; border-radius: 16px; background: var(--cta); color: var(--on-cta); font-size: 1.25rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0 16px }
 .cta.ok { background: var(--done); color: var(--on-ok) }
+/* Le bouton principal reste visible en bas de la fenêtre, même quand le clavier en réduit la hauteur */
+.sheet { scroll-padding-bottom: 96px }
+.sheet .cta { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 -12px 0 0 var(--surface), 0 8px 0 0 var(--surface) }
+/* Clavier ouvert : écran bas, on resserre */
+@media (max-height: 560px) {
+  .sheet { gap: 10px; max-height: 100%; border-radius: 16px 16px 0 0 }
+  .sheet .grab { display: none }
+  .shead h3 { font-size: 1.25rem }
+  form.f { gap: 10px }
+  label.q { font-size: 1.0625rem }
+  .inp { min-height: 52px; font-size: 1.125rem }
+  .cta { min-height: 56px; font-size: 1.125rem }
+  .auto { display: none }
+}
 .link { border: 0; background: none; color: var(--muted); font-size: 0.9375rem; font-weight: 600; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; align-self: center }
 .link.danger { color: var(--late) }
 .err { color: var(--late); font-weight: 700; font-size: 0.9375rem }

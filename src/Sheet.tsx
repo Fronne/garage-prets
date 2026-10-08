@@ -32,6 +32,22 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
     }
   }, [])
 
+  // Quand le clavier s'ouvre, l'écran rétrécit : on garde le champ en cours de saisie visible
+  useEffect(() => {
+    const show = () => {
+      const el = document.activeElement
+      if (el instanceof HTMLInputElement) setTimeout(() => el.scrollIntoView({ block: 'nearest' }), 50)
+    }
+    window.addEventListener('resize', show)
+    document.addEventListener('focusin', show)
+    window.visualViewport?.addEventListener('resize', show)
+    return () => {
+      window.removeEventListener('resize', show)
+      document.removeEventListener('focusin', show)
+      window.visualViewport?.removeEventListener('resize', show)
+    }
+  }, [])
+
   return (
     <div className={'scrim' + (closing ? ' closing' : '')} onClick={(e) => e.target === e.currentTarget && close()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
