@@ -1,5 +1,6 @@
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Back, Car, Chevron, Plate, Plus } from './icons'
+import { Back, Chevron, Plate, Plus } from './icons'
+import { Logo } from './Logo'
 import { isLate } from './util'
 
 type Props = { data: SyncData; onBack: () => void; onAjouter: () => void; onModifier: (v: Vehicule) => void }
@@ -34,7 +35,7 @@ export function Parc({ data, onBack, onAjouter, onModifier }: Props) {
               <li key={v.id}>
                 <button onClick={() => onModifier(v)} aria-label={`Modifier ${v.nom}`}>
                   <span className={'ico ' + (p ? (late ? 't-late' : 't-out') : 't-ok')}>
-                    <Car />
+                    <Logo nom={v.nom} />
                   </span>
                   <span className="pc-main">
                     <span className="pc-nm">{v.nom}</span>

@@ -1,5 +1,6 @@
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Car, Clock, Home, List, Plate, Plus, User, Warn } from './icons'
+import { Clock, Home, List, Plate, Plus, User, Warn } from './icons'
+import { Logo } from './Logo'
 import { days, fmtS, isLate } from './util'
 
 type Props = {
@@ -79,7 +80,7 @@ function Dispo({ v, onClick }: { v: Vehicule; onClick: () => void }) {
     <button className="tile t-ok" onClick={onClick} aria-label={`${v.nom}, dispo. Toucher pour prêter`}>
       <span className="top">
         <span className="ico">
-          <Car />
+          <Logo nom={v.nom} />
         </span>
         <span className="st">Dispo</span>
       </span>
@@ -104,7 +105,7 @@ function Out({ v, p, onClick }: { v: Vehicule; p: Pret; onClick: () => void }) {
     <button className={'tile ' + (late ? 't-late' : 't-out')} onClick={onClick} aria-label={`${v.nom}, ${late ? 'en retard' : 'prêtée'} à ${p.client}`}>
       <span className="top">
         <span className="ico">
-          <Car />
+          <Logo nom={v.nom} />
         </span>
         <span className="st">
           {late && <Warn />}

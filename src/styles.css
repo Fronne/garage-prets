@@ -197,3 +197,6 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .ask .cta { min-height: 56px; font-size: 1.0625rem }
 .cta.alt.danger { color: var(--late) }
 @media (prefers-reduced-motion: no-preference) { .ask { animation: up 180ms var(--ease) } }
+
+/* Logo de la marque à la place de la petite voiture */
+.ico svg.i.brand { width: 24px; height: 24px; fill: currentColor; stroke: none }
