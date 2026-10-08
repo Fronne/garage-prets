@@ -287,9 +287,9 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 .tile.flash { animation: halo 900ms var(--ease) }
 @keyframes halo { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent) } to { box-shadow: 0 0 0 14px transparent } }
 .tile .ico { position: relative }
-.done { position: absolute; inset: 0; border-radius: inherit; background: var(--c); color: #fff; display: flex; align-items: center; justify-content: center; animation: done 1500ms var(--ease) both }
-.done svg { stroke-width: 2.6 }
-@keyframes done { 0% { transform: scale(0.4); opacity: 0 } 18% { transform: scale(1.12); opacity: 1 } 30% { transform: none } 80% { opacity: 1 } 100% { opacity: 0 } }
+.coche { position: absolute; inset: 0; border-radius: inherit; background: var(--c); color: #fff; display: flex; align-items: center; justify-content: center; animation: coche 1500ms var(--ease) both }
+.coche svg { stroke-width: 2.6 }
+@keyframes coche { 0% { transform: scale(0.4); opacity: 0 } 18% { transform: scale(1.12); opacity: 1 } 30% { transform: none } 80% { opacity: 1 } 100% { opacity: 0 } }
 
 /* Compteurs du haut : le nouveau chiffre descend à sa place */
 .count .num { display: inline-block; animation: num-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) }

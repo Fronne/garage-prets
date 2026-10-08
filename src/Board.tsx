@@ -197,7 +197,7 @@ function Out({ v, p, flash, onClick }: { v: Vehicule; p: Pret; flash: boolean; o
 
 // Coche posée un instant sur le logo quand la voiture change d'état
 const Done = () => (
-  <span className="done">
+  <span className="coche">
     <Check />
   </span>
 )
