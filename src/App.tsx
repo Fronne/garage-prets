@@ -61,13 +61,22 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   // Sens de l'animation : la nouvelle page arrive par la droite si elle est après dans la barre du bas
   const [sens, setSens] = useState<'g' | 'd' | ''>('')
   const pageRef = useRef(page)
+  // Page qui s'en va pendant la transition, figée à l'endroit où on l'a quittée
+  const [sortante, setSortante] = useState<{ page: Page; y: number } | null>(null)
+  const sortieTimer = useRef(0)
   const setPage = (p: Page) => {
     if (p === pageRef.current) return
     setSens(PAGES.indexOf(p) > PAGES.indexOf(pageRef.current) ? 'd' : 'g')
+    setSortante({ page: pageRef.current, y: window.scrollY })
+    clearTimeout(sortieTimer.current)
+    sortieTimer.current = window.setTimeout(() => setSortante(null), 300)
     pageRef.current = p
     setPageRaw(p)
+    window.scrollTo(0, 0)
   }
   useEffect(() => {
+    // Chaque onglet s'ouvre en haut, même avec le geste retour
+    history.scrollRestoration = 'manual'
     const onPop = () => {
       // Retour du téléphone avec une fenêtre ouverte : on remet l'étape et la fenêtre décide (fermer, ou demander s'il faut enregistrer)
       if (sheetOpen.current && !history.state?.sheet) {
@@ -268,7 +277,6 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     if (pageRef.current === 'prets') history.pushState({ page: id }, '')
     else history.replaceState({ page: id }, '')
     setPage(id)
-    window.scrollTo(0, 0)
   }
 
   const close = () => setSheet(null)
@@ -323,30 +331,41 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} />
   }
 
+  // Contenu d'un onglet
+  const vue = (p: Page) =>
+    p === 'parc' ? (
+      <Parc
+        data={data}
+        onMoi={() => setSheet({ kind: 'moi' })}
+        onAjouter={() => setSheet({ kind: 'vehicule' })}
+        onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
+      />
+    ) : p === 'histo' ? (
+      <Historique moi={data.moi} onMoi={() => setSheet({ kind: 'moi' })} />
+    ) : (
+      <Board
+        data={data}
+        offline={offline}
+        attente={attente}
+        first={first}
+        onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
+        onVoir={(pr) => setSheet({ kind: 'voir', pid: pr.id })}
+        onAjouter={() => setSheet({ kind: 'vehicule' })}
+        onMoi={() => setSheet({ kind: 'moi' })}
+      />
+    )
+
   return (
     <>
-      <div key={page} className={'page' + (sens ? ' from-' + sens : '')}>
-        {page === 'parc' ? (
-          <Parc
-            data={data}
-            onMoi={() => setSheet({ kind: 'moi' })}
-            onAjouter={() => setSheet({ kind: 'vehicule' })}
-            onModifier={(v) => setSheet({ kind: 'vehicule', vid: v.id })}
-          />
-        ) : page === 'histo' ? (
-          <Historique moi={data.moi} onMoi={() => setSheet({ kind: 'moi' })} />
-        ) : (
-          <Board
-            data={data}
-            offline={offline}
-            attente={attente}
-            first={first}
-            onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
-            onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
-            onAjouter={() => setSheet({ kind: 'vehicule' })}
-            onMoi={() => setSheet({ kind: 'moi' })}
-          />
+      <div className="pages">
+        {sortante && (
+          <div key={'out-' + sortante.page} className={'page out-' + sens} style={{ top: -sortante.y }} aria-hidden="true">
+            {vue(sortante.page)}
+          </div>
         )}
+        <div key={page} className={'page' + (sens ? ' from-' + sens : '')}>
+          {vue(page)}
+        </div>
       </div>
       {/* Barre du bas. L'accueil reste au fond de l'historique du téléphone : retour depuis une autre page y ramène */}
       <nav className="tabs" aria-label="Pages">

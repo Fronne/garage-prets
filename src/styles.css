@@ -261,11 +261,15 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 /* Fenêtre longue : elle défile au lieu d'écraser son contenu (la plaque était tassée) */
 .sheet > * { flex-shrink: 0 }
 
-/* Changement d'onglet : la page arrive du côté où l'on glisse */
-@media (prefers-reduced-motion: no-preference) {
-  .page.from-d { animation: from-d 220ms var(--ease) }
-  .page.from-g { animation: from-g 220ms var(--ease) }
-  @keyframes from-d { from { opacity: 0; transform: translateX(32px) } }
-  @keyframes from-g { from { opacity: 0; transform: translateX(-32px) } }
-}
+/* Changement d'onglet : l'ancienne page part d'un côté pendant que la nouvelle arrive de l'autre */
+.pages { position: relative; overflow-x: clip }
+.page.out-d, .page.out-g { position: absolute; left: 0; right: 0; pointer-events: none }
+.page.from-d { animation: from-d 280ms var(--ease) }
+.page.from-g { animation: from-g 280ms var(--ease) }
+.page.out-d { animation: out-d 280ms var(--ease) both }
+.page.out-g { animation: out-g 280ms var(--ease) both }
+@keyframes from-d { from { transform: translateX(100%) } }
+@keyframes from-g { from { transform: translateX(-100%) } }
+@keyframes out-d { to { transform: translateX(-100%) } }
+@keyframes out-g { to { transform: translateX(100%) } }
 .page { overflow-x: clip }
