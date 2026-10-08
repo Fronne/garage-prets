@@ -45,7 +45,6 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
               value={nom}
               onChange={(e) => setNom(e.target.value)}
               aria-describedby="verr"
-              autoFocus
             />
             <div className="err" id="verr" role="alert">
               {err}

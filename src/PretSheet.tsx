@@ -161,7 +161,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <label className="sub" htmlFor="tel">
                   Téléphone
                 </label>
-                <input className="inp sm" id="tel" type="tel" inputMode="tel" value={d.tel} onChange={(e) => set({ tel: e.target.value })} autoFocus />
+                <input className="inp sm" id="tel" type="tel" inputMode="tel" value={d.tel} onChange={(e) => set({ tel: e.target.value })} />
                 <label className="sub" htmlFor="note">
                   Note
                 </label>
