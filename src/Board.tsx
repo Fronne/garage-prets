@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
 import { Check, Clock, Home, Plate, Plus, User, Warn } from './icons'
 import { Logo } from './Logo'
@@ -36,12 +36,23 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
   const nLate = vs.filter((v) => rank(v) === 0).length
   const etat = (v: Vehicule) => ['late', 'out', 'ok'][rank(v)]
 
+  // Toucher une pastille du haut n'affiche que ces voitures ; la retoucher les remontre toutes
+  const [filtre, setFiltre] = useState<'ok' | 'out' | 'late' | null>(null)
+  const f = filtre === 'late' && nLate === 0 ? null : filtre
+  const garde = (v: Vehicule) => !f || (f === 'ok' ? rank(v) === 2 : f === 'out' ? rank(v) < 2 : rank(v) === 0)
+  const vus = vs.filter(garde)
+  const pastille = (k: 'ok' | 'out' | 'late', texte: ReactNode) => (
+    <button type="button" className={'count c-' + k} aria-pressed={f === k} onClick={() => setFiltre(f === k ? null : k)}>
+      <span>{texte}</span>
+    </button>
+  )
+
   // Voiture prêtée ou rendue : sa carte glisse vers sa nouvelle place et affiche une coche un instant
   const gridRef = useRef<HTMLDivElement>(null)
   const avant = useRef<Map<string, { etat: string; x: number; y: number }> | null>(null)
   const [flash, setFlash] = useState<string[]>([])
   const flashTimer = useRef(0)
-  const cle = vs.map((v) => v.id + etat(v)).join()
+  const cle = vus.map((v) => v.id + etat(v)).join()
   useLayoutEffect(() => {
     const grid = gridRef.current
     if (!grid) return
@@ -80,24 +91,10 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
           </div>
           <Avatar moi={data.moi} onClick={onMoi} />
         </div>
-        <div className="counts">
-          <span className="count c-ok">
-            <span>
-              <Num n={vs.length - nOut} /> dispo
-            </span>
-          </span>
-          <span className="count c-out">
-            <span>
-              <Num n={nOut} /> prêtée{nOut > 1 ? 's' : ''}
-            </span>
-          </span>
-          {nLate > 0 && (
-            <span className="count c-late">
-              <span>
-                <Num n={nLate} /> en retard
-              </span>
-            </span>
-          )}
+        <div className="counts" role="group" aria-label="Filtrer les voitures">
+          {pastille('ok', <><Num n={vs.length - nOut} /> dispo</>)}
+          {pastille('out', <><Num n={nOut} /> prêtée{nOut > 1 ? 's' : ''}</>)}
+          {nLate > 0 && pastille('late', <><Num n={nLate} /> en retard</>)}
         </div>
         {attente > 0 ? (
           <div className="offline">
@@ -108,12 +105,17 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
         )}
       </header>
       <div ref={gridRef} className={'grid' + (first ? ' first' : '') + (pulse ? ' pulse' : '')}>
-        {vs.map((v) => {
+        {vus.map((v) => {
           const p = actifs.get(v.id)
           const fl = flash.includes(v.id)
           return p ? <Out key={v.id} v={v} p={p} flash={fl} onClick={() => onVoir(p)} /> : <Dispo key={v.id} v={v} flash={fl} onClick={() => onPreter(v)} />
         })}
         {/* Ajouter une voiture se fait dans « Le parc » ; ici seulement tant que le parc est vide */}
+        {vs.length > 0 && vus.length === 0 && (
+          <button type="button" className="vide" onClick={() => setFiltre(null)}>
+            Aucune voiture {f === 'ok' ? 'dispo' : f === 'out' ? 'prêtée' : 'en retard'}. Toucher pour tout voir.
+          </button>
+        )}
         {vs.length === 0 && (
           <button className="tile add" onClick={onAjouter}>
             <Plus />
