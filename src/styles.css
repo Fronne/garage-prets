@@ -88,6 +88,8 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .inp { min-height: 60px; border: 2px solid var(--ink); border-radius: 12px; padding: 0 16px; font-size: 1.25rem; background: var(--surface); width: 100% }
 .inp.sm { min-height: 50px; font-size: 1.0625rem; border-color: var(--line) }
 .inp.sm:focus { border-color: var(--ink) }
+/* Champ sélectionné : bord foncé et halo gris léger, sans le cadre bleu du téléphone */
+input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08) }
 .chips { display: flex; flex-wrap: wrap; gap: 8px }
 .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; border: 2px solid var(--line); background: var(--surface) }
 .chip[aria-pressed='true'] { border-color: var(--ink); background: var(--ink); color: var(--surface) }
