@@ -1,11 +1,11 @@
 import { useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
-import { Cal, Check, Pen, Plate } from './icons'
+import { Cal, Check, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
 import { Sheet, SheetHead } from './Sheet'
 import { dayStr, fmtS } from './util'
 
-export type Draft = { client: string; retour: string; tel: string; note: string; photo: string | null; open: 'retour' | 'plus' | null }
+export type Draft = { client: string; retour: string; tel: string; note: string; photo: string | null; open: 'retour' | 'tel' | 'note' | null }
 
 export const emptyDraft = (p?: Pret): Draft => ({
   client: p?.client ?? '',
@@ -118,7 +118,11 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <Cal />
                 {d.retour ? fmtS(d.retour) : 'Retour'}
               </button>
-              <button type="button" className={'opt' + (d.tel || d.note ? ' done' : '')} aria-expanded={d.open === 'plus'} onClick={() => toggle('plus')}>
+              <button type="button" className={'opt' + (d.tel ? ' done' : '')} aria-expanded={d.open === 'tel'} onClick={() => toggle('tel')}>
+                <Phone sm />
+                Téléphone
+              </button>
+              <button type="button" className={'opt' + (d.note ? ' done' : '')} aria-expanded={d.open === 'note'} onClick={() => toggle('note')}>
                 <Pen />
                 Note
               </button>
@@ -136,12 +140,16 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <DatePicker value={d.retour} min={dayStr(0)} placeholder="Autre date de retour" onChange={(v) => set({ retour: v })} />
               </div>
             )}
-            {d.open === 'plus' && (
+            {d.open === 'tel' && (
               <>
                 <label className="sub" htmlFor="tel">
-                  Téléphone
+                  Téléphone du client
                 </label>
-                <input className="inp sm" id="tel" type="tel" inputMode="tel" value={d.tel} onChange={(e) => set({ tel: e.target.value })} />
+                <input className="inp sm" id="tel" type="tel" inputMode="tel" autoComplete="off" placeholder="06 12 34 56 78" value={d.tel} onChange={(e) => set({ tel: e.target.value })} />
+              </>
+            )}
+            {d.open === 'note' && (
+              <>
                 <label className="sub" htmlFor="note">
                   Note
                 </label>
