@@ -1,10 +1,9 @@
 import { useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
-import { api, errorText } from './api'
-import { Cal, Cam, Check, Pen, Plate } from './icons'
+import { Cal, Check, Pen, Plate } from './icons'
 import { DatePicker } from './DatePicker'
 import { Sheet, SheetHead } from './Sheet'
-import { dayStr, fmtS, shrinkPhoto } from './util'
+import { dayStr, fmtS } from './util'
 
 export type Draft = { client: string; retour: string; tel: string; note: string; photo: string | null; open: 'retour' | 'plus' | null }
 
@@ -39,9 +38,7 @@ type Props = {
 export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVehicule }: Props) {
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
-  const [photoBusy, setPhotoBusy] = useState(false)
   const clientRef = useRef<HTMLInputElement>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
 
   // Le brouillon survit à la fermeture de la fenêtre : le nom tapé revient à la réouverture
   const set = (patch: Partial<Draft>) =>
@@ -51,21 +48,6 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
       return next
     })
   const toggle = (open: Draft['open']) => set({ open: d.open === open ? null : open })
-
-  async function addPhoto(file: File | undefined) {
-    if (!file) return
-    setPhotoBusy(true)
-    setErr('')
-    try {
-      const data = await shrinkPhoto(file)
-      const { id } = await api<{ id: string }>('/photos', 'POST', { id: crypto.randomUUID(), data })
-      set({ photo: id })
-    } catch (e) {
-      setErr(errorText(e))
-    } finally {
-      setPhotoBusy(false)
-    }
-  }
 
   function save() {
     if (!d.client.trim()) {
@@ -136,18 +118,11 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <Cal />
                 {d.retour ? fmtS(d.retour) : 'Retour'}
               </button>
-              {!pret && (
-                <button type="button" className={'opt' + (d.photo ? ' done' : '')} disabled={photoBusy} onClick={() => fileRef.current?.click()}>
-                  <Cam />
-                  {photoBusy ? 'Envoi…' : d.photo ? 'Photo prise' : 'Compteur'}
-                </button>
-              )}
               <button type="button" className={'opt' + (d.tel || d.note ? ' done' : '')} aria-expanded={d.open === 'plus'} onClick={() => toggle('plus')}>
                 <Pen />
                 Note
               </button>
             </div>
-            <input ref={fileRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => addPhoto(e.target.files?.[0])} />
             {d.open === 'retour' && (
               <div className="chips">
                 {RETOURS.map(([label, n]) => {
@@ -179,7 +154,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 />
               </>
             )}
-            <button className="cta" type="submit" disabled={photoBusy}>
+            <button className="cta" type="submit">
               <Check />
               {pret ? 'Enregistrer' : 'Prêter la ' + v.nom}
             </button>
