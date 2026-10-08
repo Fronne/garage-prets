@@ -91,16 +91,16 @@ export function DatePicker({ value, onChange, min, max, placeholder, id }: Props
               </div>
               <div className="cal-ft">
                 {(!min || auj >= min) && (!max || auj <= max) && (
-                  <button type="button" className="link" onClick={() => choisir(auj)}>
+                  <button type="button" className="cal-btn" onClick={() => choisir(auj)}>
                     Aujourd'hui
                   </button>
                 )}
                 {value && (
-                  <button type="button" className="link" onClick={() => choisir('')}>
+                  <button type="button" className="cal-btn" onClick={() => choisir('')}>
                     Effacer
                   </button>
                 )}
-                <button type="button" className="link" onClick={() => setOpen(false)}>
+                <button type="button" className="cal-btn fermer" onClick={() => setOpen(false)}>
                   Fermer
                 </button>
               </div>
