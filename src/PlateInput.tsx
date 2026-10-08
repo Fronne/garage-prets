@@ -33,6 +33,9 @@ export function PlateInput({ value, onChange }: { value: string; onChange: (v: s
     }
   }
 
+  // Toucher une case la sélectionne en entier : la lettre tapée remplace la case au lieu d'être ignorée
+  const selectAll = (e: { currentTarget: HTMLInputElement }) => e.currentTarget.select()
+
   // Coller une plaque entière la répartit dans les trois cases
   function paste(e: ClipboardEvent<HTMLInputElement>) {
     const f = formatPlate(e.clipboardData.getData('text')).match(SIV)
@@ -78,6 +81,8 @@ export function PlateInput({ value, onChange }: { value: string; onChange: (v: s
       value={parts[i]}
       onChange={(e) => edit(i, e.target.value)}
       onKeyDown={(e) => back(i, e)}
+      onFocus={selectAll}
+      onClick={selectAll}
       onPaste={paste}
     />
   )

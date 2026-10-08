@@ -182,3 +182,9 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .plate-box { min-width: 0; flex: 2; text-align: center; padding: 0 4px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums }
 .plate-box.num { flex: 3 }
 .plate-box::placeholder { color: #c4c8cf; font-weight: 600 }
+
+/* Fenêtre « Sur ce téléphone » */
+.moi { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 4px; text-align: center }
+.moi-av { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-size: 1.875rem; font-weight: 800 }
+.moi-n { font-size: 1.375rem; font-weight: 800; margin-top: 4px }
+.cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }

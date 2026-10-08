@@ -11,11 +11,19 @@ type Props = {
   onRetirer?: () => void
 }
 
+// Indice de la première case pas remplie d'une plaque AB-123-CD commencée, -1 si elle est vide, complète ou en saisie libre
+function plaqueIncomplete(immat: string) {
+  const m = immat.match(/^([A-Z]{0,2})-?(\d{0,3})-?([A-Z]{0,2})$/)
+  if (!immat || !m) return -1
+  return [m[1].length < 2, m[2].length < 3, m[3].length < 2].indexOf(true)
+}
+
 // Ajouter ou modifier une voiture : un nom suffit, la plaque est facultative
 export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
   const [nom, setNom] = useState(v?.nom ?? '')
   const [immat, setImmat] = useState(v?.immat ?? '')
   const [err, setErr] = useState('')
+  const [errPlaque, setErrPlaque] = useState('')
   const [sure, setSure] = useState(false)
 
   return (
@@ -29,6 +37,14 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
             onSubmit={(e) => {
               e.preventDefault()
               if (!nom.trim()) return setErr('Il faut juste un nom, par exemple « Clio grise ».')
+              // Plaque commencée mais pas finie : on bloque (vide, c'est permis)
+              const incomplete = plaqueIncomplete(immat)
+              if (incomplete >= 0) {
+                setErrPlaque('Plaque incomplète : finis-la (AB-123-CD) ou vide-la.')
+                const box = document.querySelectorAll<HTMLInputElement>('.plate-box')[incomplete]
+                box?.focus()
+                return box?.setSelectionRange(box.value.length, box.value.length)
+              }
               onSave(nom.trim(), immat.trim())
               close()
             }}
@@ -52,7 +68,10 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
             <label className="sub" htmlFor="immat">
               Plaque (facultatif)
             </label>
-            <PlateInput value={immat} onChange={setImmat} />
+            <PlateInput value={immat} onChange={(p) => (setImmat(p), setErrPlaque(''))} />
+            <div className="err" role="alert">
+              {errPlaque}
+            </div>
             <button className="cta" type="submit">
               <Check />
               {v ? 'Enregistrer' : 'Ajouter la voiture'}

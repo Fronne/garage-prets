@@ -8,6 +8,7 @@ import { emptyDraft, PretSheet, type Draft } from './PretSheet'
 import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
+import { MoiSheet } from './MoiSheet'
 
 const CACHE_KEY = 'garage.cache'
 const POLL_MS = 15_000
@@ -16,6 +17,7 @@ type SheetState =
   | { kind: 'preter'; vid: string; pid?: string }
   | { kind: 'voir'; pid: string }
   | { kind: 'vehicule'; vid?: string }
+  | { kind: 'moi' }
   | null
 
 type Toast = { msg: string; undo?: () => void; error?: boolean } | null
@@ -227,6 +229,8 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         onRetirer={v && !data.prets.some((p) => p.vehicule_id === v.id && !p.retour) ? () => retirer(v) : undefined}
       />
     )
+  } else if (sheet?.kind === 'moi') {
+    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} />
   }
 
   return (
@@ -251,9 +255,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
             setParc(true)
             window.scrollTo(0, 0)
           }}
-          onMoi={() => {
-            if (confirm(`Connecté en tant que ${data.moi}. Changer de personne sur ce téléphone ?`)) onLogout()
-          }}
+          onMoi={() => setSheet({ kind: 'moi' })}
         />
       )}
       {sheetEl}
