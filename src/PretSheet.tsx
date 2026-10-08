@@ -66,12 +66,29 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
     }
   }
 
+  function save() {
+    if (!d.client.trim()) {
+      setErr('Il faut juste le nom du client.')
+      clientRef.current?.focus()
+      return false
+    }
+    onSubmit(d)
+    return true
+  }
+
+  // Modifié par rapport au prêt d'origine (ou, pour un nouveau prêt, quelque chose de rempli)
+  const base = emptyDraft(pret)
+  const dirty = (['client', 'retour', 'tel', 'note', 'photo'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? ''))
+
   const title = pret ? 'Modifier le prêt' : 'Prêter la ' + v.nom
   return (
-    <Sheet onClose={onClose}>
+    <Sheet
+      onClose={onClose}
+      ask={{ dirty, save, saveLabel: pret ? 'Enregistrer' : 'Prêter la ' + v.nom, discard: pret ? undefined : () => Object.assign(draft, emptyDraft()) }}
+    >
       {(close) => (
         <>
-          <SheetHead title={title} close={close}>
+          <SheetHead title={title}>
             {pret && <span className="sub">{v.nom}</span>}
           </SheetHead>
           <Plate immat={v.immat} />
@@ -80,13 +97,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
             noValidate
             onSubmit={(e) => {
               e.preventDefault()
-              if (!d.client.trim()) {
-                setErr('Il faut juste le nom du client.')
-                clientRef.current?.focus()
-                return
-              }
-              onSubmit(d)
-              close()
+              if (save()) close()
             }}
           >
             <label className="q" htmlFor="client">

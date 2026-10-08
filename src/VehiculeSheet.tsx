@@ -26,27 +26,37 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
   const [errPlaque, setErrPlaque] = useState('')
   const [sure, setSure] = useState(false)
 
+  // Vérifie et enregistre ; false si un champ bloque (le message s'affiche sous ce champ)
+  function save() {
+    if (!nom.trim()) {
+      setErr('Il faut juste un nom, par exemple « Clio grise ».')
+      return false
+    }
+    // Plaque commencée mais pas finie : on bloque (vide, c'est permis)
+    const incomplete = plaqueIncomplete(immat)
+    if (incomplete >= 0) {
+      setErrPlaque('Plaque incomplète : finis-la (AB-123-CD) ou vide-la.')
+      const box = document.querySelectorAll<HTMLInputElement>('.plate-box')[incomplete]
+      box?.focus()
+      box?.setSelectionRange(box.value.length, box.value.length)
+      return false
+    }
+    onSave(nom.trim(), immat.trim())
+    return true
+  }
+
+  const dirty = nom !== (v?.nom ?? '') || immat !== (v?.immat ?? '')
   return (
-    <Sheet onClose={onClose}>
+    <Sheet onClose={onClose} ask={{ dirty, save, saveLabel: v ? 'Enregistrer' : 'Ajouter la voiture' }}>
       {(close) => (
         <>
-          <SheetHead title={v ? 'Modifier la voiture' : 'Ajouter une voiture'} close={close} />
+          <SheetHead title={v ? 'Modifier la voiture' : 'Ajouter une voiture'} />
           <form
             className="f"
             noValidate
             onSubmit={(e) => {
               e.preventDefault()
-              if (!nom.trim()) return setErr('Il faut juste un nom, par exemple « Clio grise ».')
-              // Plaque commencée mais pas finie : on bloque (vide, c'est permis)
-              const incomplete = plaqueIncomplete(immat)
-              if (incomplete >= 0) {
-                setErrPlaque('Plaque incomplète : finis-la (AB-123-CD) ou vide-la.')
-                const box = document.querySelectorAll<HTMLInputElement>('.plate-box')[incomplete]
-                box?.focus()
-                return box?.setSelectionRange(box.value.length, box.value.length)
-              }
-              onSave(nom.trim(), immat.trim())
-              close()
+              if (save()) close()
             }}
           >
             <label className="q" htmlFor="nom">

@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { X } from './icons'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
+import { Check, X } from './icons'
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
-// Fenêtre qui monte du bas de l'écran. Elle se ferme plus vite qu'elle ne s'ouvre et rend le focus à la carte d'origine.
-export function Sheet({ onClose, children }: { onClose: () => void; children: (close: () => void) => ReactNode }) {
+/** Fenêtre avec des modifications en cours : on demande avant de les perdre */
+export type Ask = { dirty: boolean; save: () => boolean; saveLabel: string; discard?: () => void }
+
+// La croix d'en-tête passe par la même demande que le glissement vers le bas
+const RequestClose = createContext<() => void>(() => {})
+
+// Fenêtre qui monte du bas de l'écran. On la ferme par la croix, en touchant le fond ou en la faisant glisser vers le bas ;
+// s'il y a des modifications, elle demande d'abord s'il faut les enregistrer. Elle rend le focus à la carte d'origine.
+export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: Ask; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false)
+  const [asking, setAsking] = useState(false)
   const back = useRef<Element | null>(document.activeElement)
   const sheetRef = useRef<HTMLDivElement>(null)
 
@@ -15,10 +23,44 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
     setClosing(true)
     setTimeout(onClose, 140)
   }
+  const request = () => (ask?.dirty ? setAsking(true) : close())
 
-  // Échap ferme la fenêtre ; la référence suit la dernière version de close sans réabonner l'écouteur
-  const closeRef = useRef(close)
-  closeRef.current = close
+  // Glisser vers le bas depuis le haut de la fenêtre la ferme
+  const drag = useRef<{ y0: number; dy: number; t0: number } | null>(null)
+  const onTouchStart = (e: TouchEvent) => {
+    const el = sheetRef.current!
+    drag.current = el.scrollTop <= 0 ? { y0: e.touches[0].clientY, dy: 0, t0: Date.now() } : null
+  }
+  const onTouchMove = (e: TouchEvent) => {
+    const d = drag.current
+    if (!d) return
+    d.dy = Math.max(0, e.touches[0].clientY - d.y0)
+    // On ne suit le doigt que si la fenêtre est tout en haut (sinon c'est un défilement normal)
+    if (sheetRef.current!.scrollTop > 0) return void (drag.current = null)
+    sheetRef.current!.style.transition = 'none'
+    sheetRef.current!.style.transform = `translateY(${d.dy}px)`
+  }
+  const onTouchEnd = () => {
+    const d = drag.current
+    drag.current = null
+    const el = sheetRef.current
+    if (!d || !el) return
+    const fast = d.dy > 40 && d.dy / (Date.now() - d.t0) > 0.6
+    el.style.transition = 'transform 160ms ease-out'
+    if ((d.dy > 110 || fast) && !ask?.dirty) {
+      el.style.animation = 'none'
+      el.style.transform = 'translateY(100%)'
+      setClosing(true)
+      setTimeout(onClose, 160)
+      return
+    }
+    el.style.transform = ''
+    if (d.dy > 110 || fast) setAsking(true)
+  }
+
+  // Échap ferme la fenêtre ; la référence suit la dernière version sans réabonner l'écouteur
+  const closeRef = useRef(request)
+  closeRef.current = asking ? () => setAsking(false) : request
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
     document.addEventListener('keydown', onKey)
@@ -56,23 +98,64 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
   }, [])
 
   return (
-    <div className={'scrim' + (closing ? ' closing' : '')} onClick={(e) => e.target === e.currentTarget && close()}>
-      <div ref={sheetRef} tabIndex={-1} className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div className={'scrim' + (closing ? ' closing' : '')} onClick={(e) => e.target === e.currentTarget && request()}>
+      <div
+        ref={sheetRef}
+        tabIndex={-1}
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sheet-title"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onTouchCancel={onTouchEnd}
+      >
         <div className="grab" aria-hidden="true" />
-        {children(close)}
+        <RequestClose.Provider value={request}>{children(close)}</RequestClose.Provider>
       </div>
+      {asking && ask && (
+        <div className="ask-scrim" onClick={(e) => e.target === e.currentTarget && setAsking(false)}>
+          <div className="ask" role="alertdialog" aria-modal="true" aria-labelledby="ask-t">
+            <h3 id="ask-t">Enregistrer les modifications ?</h3>
+            <button
+              className="cta"
+              onClick={() => {
+                setAsking(false)
+                if (ask.save()) close()
+              }}
+            >
+              <Check />
+              {ask.saveLabel}
+            </button>
+            <button
+              className="cta alt danger"
+              onClick={() => {
+                ask.discard?.()
+                close()
+              }}
+            >
+              Ne pas enregistrer
+            </button>
+            <button className="link" onClick={() => setAsking(false)}>
+              Continuer à modifier
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-export function SheetHead({ title, close, children }: { title: string; close: () => void; children?: ReactNode }) {
+export function SheetHead({ title, children }: { title: string; children?: ReactNode }) {
+  const request = useContext(RequestClose)
   return (
     <div className="shead">
       <div className="shead-t">
         {children}
         <h3 id="sheet-title">{title}</h3>
       </div>
-      <button className="x" onClick={close} aria-label="Fermer">
+      <button className="x" onClick={request} aria-label="Fermer">
         <X />
       </button>
     </div>

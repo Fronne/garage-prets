@@ -7,7 +7,7 @@ export function MoiSheet({ moi, onClose, onChanger }: { moi: string; onClose: ()
     <Sheet onClose={onClose}>
       {(close) => (
         <>
-          <SheetHead title="Sur ce téléphone" close={close} />
+          <SheetHead title="Sur ce téléphone" />
           <div className="moi">
             <span className="moi-av" aria-hidden="true">
               {moi.trim().charAt(0).toUpperCase()}

@@ -27,7 +27,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier }: Props) 
     <Sheet onClose={onClose}>
       {(close) => (
         <>
-          <SheetHead title={v.nom} close={close}>
+          <SheetHead title={v.nom}>
             {late ? (
               <span className="st st-late">
                 <Warn />
