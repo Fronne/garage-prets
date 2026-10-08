@@ -47,3 +47,14 @@ export async function shrinkPhoto(file: File): Promise<string> {
   canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
   return canvas.toDataURL('image/jpeg', 0.7)
 }
+
+// Plaque française AB-123-CD : les tirets se placent tout seuls pendant la saisie.
+// Ils n'apparaissent qu'une fois le groupe suivant commencé, pour que l'effacement reste naturel.
+// Une ancienne plaque (qui ne commence pas par deux lettres) est laissée telle quelle, en majuscules.
+export function formatPlate(raw: string): string {
+  const up = raw.toUpperCase()
+  const c = up.replace(/[^A-Z0-9]/g, '')
+  if (!/^[A-Z]{2}/.test(c)) return up
+  const groups = [c.slice(0, 2), c.slice(2, 5), c.slice(5, 7)].filter(Boolean)
+  return groups.join('-')
+}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Vehicule } from '../shared/types'
 import { Check } from './icons'
 import { Sheet, SheetHead } from './Sheet'
+import { formatPlate } from './util'
 
 type Props = {
   v?: Vehicule
@@ -58,8 +59,9 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
               autoComplete="off"
               autoCapitalize="characters"
               placeholder="AB-123-CD"
+              maxLength={12}
               value={immat}
-              onChange={(e) => setImmat(e.target.value.toUpperCase())}
+              onChange={(e) => setImmat(formatPlate(e.target.value))}
             />
             <button className="cta" type="submit">
               <Check />
