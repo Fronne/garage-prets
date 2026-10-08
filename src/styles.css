@@ -140,6 +140,7 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .login .logo { width: 64px; height: 64px; border-radius: 18px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center }
 .login .logo svg { width: 36px; height: 36px; stroke-width: 1.6 }
 .login p { margin: 0; color: var(--muted) }
+.chip.big { min-height: 56px; padding: 0 24px; font-size: 1.125rem; font-weight: 700 }
 
 @media (prefers-reduced-motion: no-preference) {
   .scrim { animation: fade 200ms var(--ease) }

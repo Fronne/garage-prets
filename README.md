@@ -11,7 +11,7 @@ Une application toute simple pour le garage : savoir quelle voiture de prêt est
 - **Voitures** : ajouter avec un nom (la plaque est facultative), modifier ou retirer du parc.
 - Mode clair uniquement, police Plus Jakarta Sans, design « Qui a quoi ? ».
 
-Chaque téléphone se connecte une fois avec le **code du garage** et un prénom (affiché dans « Prêtée par »).
+Dans l'appli Android, chacun touche son prénom au premier lancement : rien à taper. Dans un navigateur, on se connecte une fois avec le **code du garage** et un prénom (affiché dans « Prêtée par »).
 
 ## Technique
 
@@ -70,6 +70,16 @@ Il faut le kit Android (Android SDK) ; son emplacement est écrit dans `android/
 `npm run apk` fabrique `android/app/build/outputs/apk/release/app-release.apk`. La signature utilise `android/keystore.properties` et `android/keystore/`, qui ne sont pas dans le dépôt (la clé du calendrier partagé convient). Sans eux, l'APK est signé avec la clé de test de l'ordinateur : il s'installe, mais une mise à jour construite sur un autre ordinateur devra d'abord désinstaller l'ancienne.
 
 Les icônes Android sont produites par `npm run icons`, comme celles du site.
+
+**Connexion sans code dans l'appli** : l'APK porte une clé (`android/cle-appli.txt`, hors du dépôt) qu'il présente au serveur. Au premier lancement, on touche simplement son prénom (« Qui es-tu ? »). Pour la mettre en place une fois :
+
+```powershell
+npm run cle                                        # crée android/cle-appli.txt et affiche la clé
+node scripts/cle-appli.mjs | npx wrangler secret put APP_KEY   # la donne au serveur
+npm run apk                                        # l'APK embarque la clé
+```
+
+Sans ce fichier, l'APK demande le code du garage, comme le site ouvert dans un navigateur. À sauvegarder avec la clé de signature.
 
 ## Ce qui n'est pas dans le dépôt
 

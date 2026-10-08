@@ -231,7 +231,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}
         onAjouter={() => setSheet({ kind: 'vehicule' })}
         onMoi={() => {
-          if (confirm(`Connecté en tant que ${data.moi}. Se déconnecter de ce téléphone ?`)) onLogout()
+          if (confirm(`Connecté en tant que ${data.moi}. Changer de personne sur ce téléphone ?`)) onLogout()
         }}
       />
       {sheetEl}

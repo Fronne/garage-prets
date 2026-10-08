@@ -2,6 +2,8 @@ export interface Env {
   DB: D1Database
   ASSETS: Fetcher
   GARAGE_CODE?: string
+  /** Clé glissée dans l'APK du garage : l'appli se connecte sans code */
+  APP_KEY?: string
 }
 
 export function b64url(bytes: ArrayBuffer | Uint8Array): string {

@@ -14,6 +14,13 @@ export async function codeMatches(env: Env, code: string): Promise<boolean> {
   return (await hmac(secret, 'code:' + code.trim())) === (await hmac(secret, 'code:' + secret))
 }
 
+// La clé de l'appli Android, comparée de la même façon
+export async function appKeyMatches(env: Env, cle: string): Promise<boolean> {
+  if (!env.APP_KEY || !env.GARAGE_CODE) return false
+  const secret = env.GARAGE_CODE
+  return (await hmac(secret, 'app:' + cle.trim())) === (await hmac(secret, 'app:' + env.APP_KEY.trim()))
+}
+
 // Le jeton porte le prénom de la personne, signé avec le code du garage : changer le code déconnecte tous les téléphones
 export async function makeToken(env: Env, prenom: string): Promise<string> {
   const id = b64url(enc.encode(prenom))

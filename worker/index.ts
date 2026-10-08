@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { codeMatches, makeToken, verifyToken } from './auth'
+import { appKeyMatches, codeMatches, makeToken, verifyToken } from './auth'
 import type { Env } from './env'
 
 const MAX_LOGIN_FAILS = 10
@@ -40,6 +40,19 @@ app.onError((err, c) => {
   return c.json({ error: 'Erreur du serveur.' }, 500)
 })
 
+// Prénoms déjà utilisés sur les téléphones, proposés dans « Qui es-tu ? »
+async function getEquipe(env: Env): Promise<string[]> {
+  return JSON.parse((await env.DB.prepare("SELECT value FROM meta WHERE key = 'equipe'").first<string>('value')) ?? '[]')
+}
+
+async function addEquipe(env: Env, equipe: string[], prenom: string) {
+  if (equipe.some((n) => n.toLowerCase() === prenom.toLowerCase())) return
+  const next = [...equipe, prenom].sort((a, b) => a.localeCompare(b, 'fr')).slice(0, 30)
+  await env.DB.prepare("INSERT INTO meta (key, value) VALUES ('equipe', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .bind(JSON.stringify(next))
+    .run()
+}
+
 app.post('/api/login', async (c) => {
   const env = c.env
   if (!env.GARAGE_CODE) throw new HttpError(500, "Le code du garage n'est pas configuré sur le serveur.")
@@ -61,6 +74,20 @@ app.post('/api/login', async (c) => {
 
   const prenom = text(b.prenom, 30)
   if (!prenom) throw bad('Il faut ton prénom.')
+  await addEquipe(env, await getEquipe(env), prenom)
+  return c.json({ token: await makeToken(env, prenom), prenom })
+})
+
+// Appli Android du garage : elle porte sa propre clé, il suffit de choisir son prénom dans la liste de l'équipe
+app.post('/api/login-appli', async (c) => {
+  const env = c.env
+  const b = await c.req.json().catch(() => ({}))
+  if (!(await appKeyMatches(env, String(b.cle ?? '')))) throw new HttpError(401, 'Appli non reconnue.')
+  const equipe = await getEquipe(env)
+  const prenom = text(b.prenom, 30)
+  // Sans prénom : on renvoie seulement la liste de l'équipe
+  if (!prenom) return c.json({ equipe })
+  await addEquipe(env, equipe, prenom)
   return c.json({ token: await makeToken(env, prenom), prenom })
 })
 
