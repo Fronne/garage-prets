@@ -27,7 +27,7 @@ Le Worker sert à la fois le site (dossier `dist/`) et l'API sous `/api`. Sur iP
 
 ## Lancer en local
 
-Il faut Node.js.
+Il faut Node.js 20 ou plus récent (Capacitor refuse les versions plus anciennes).
 
 ```bash
 npm install
