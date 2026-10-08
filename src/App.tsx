@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
 import { api, ApiError, errorText, getToken, setToken } from './api'
 import { Board } from './Board'
@@ -26,7 +26,7 @@ type SheetState =
 type Page = 'prets' | 'parc' | 'histo'
 const PAGES: Page[] = ['prets', 'parc', 'histo']
 
-type Toast = { msg: string; undo?: () => void; error?: boolean } | null
+type Toast = { msg: string; undo?: () => void; error?: boolean; id?: number } | null
 
 function readCache(): SyncData | null {
   try {
@@ -140,7 +140,8 @@ function Garage({ onLogout }: { onLogout: () => void }) {
 
   const showToast = (t: Toast) => {
     clearTimeout(toastTimer.current)
-    setToast(t)
+    // Nouvel id : chaque message rejoue son entrée
+    setToast(t && { ...t, id: Date.now() })
     if (t) toastTimer.current = setTimeout(() => setToast(null), t.undo ? 5000 : 3500)
   }
   const showToastRef = useRef(showToast)
@@ -199,6 +200,24 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       document.removeEventListener('touchend', up)
     }
   }, [])
+
+  // Pastille de la barre du bas : elle glisse sous l'onglet choisi
+  const navRef = useRef<HTMLElement>(null)
+  const [pastille, setPastille] = useState<{ x: number; y: number; anim: boolean } | null>(null)
+  useLayoutEffect(() => {
+    const placer = (anim: boolean) => {
+      const nav = navRef.current
+      const ico = nav?.querySelector('button[aria-current] svg')
+      if (!nav || !ico) return
+      const n = nav.getBoundingClientRect()
+      const r = ico.getBoundingClientRect()
+      setPastille({ x: r.left - n.left, y: r.top - n.top, anim })
+    }
+    placer(pastille !== null)
+    const onResize = () => placer(false)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [page, !!data])
 
   if (!data) {
     return (
@@ -368,7 +387,8 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
       {/* Barre du bas. L'accueil reste au fond de l'historique du téléphone : retour depuis une autre page y ramène */}
-      <nav className="tabs" aria-label="Pages">
+      <nav className="tabs" aria-label="Pages" ref={navRef}>
+        {pastille && <span className={'tab-pill' + (pastille.anim ? ' anim' : '')} style={{ transform: `translate(${pastille.x}px, ${pastille.y}px)` }} />}
         {(
           [
             ['prets', <Car key="i" />, 'Prêts'],
@@ -385,7 +405,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       {sheetEl}
       <div role="status" aria-live="polite">
         {toast && (
-          <div className={'toast' + (toast.error ? ' err-t' : '')}>
+          <div key={toast.id} className={'toast' + (toast.error ? ' err-t' : '')}>
             <span>{toast.msg}</span>
             {toast.undo && (
               <button

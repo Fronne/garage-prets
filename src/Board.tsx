@@ -1,5 +1,6 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Clock, Home, Plate, Plus, User, Warn } from './icons'
+import { Check, Clock, Home, Plate, Plus, User, Warn } from './icons'
 import { Logo } from './Logo'
 import { days, fmtS, isLate } from './util'
 
@@ -31,6 +32,37 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
     )
   const nOut = actifs.size
   const nLate = vs.filter((v) => rank(v) === 0).length
+  const etat = (v: Vehicule) => ['late', 'out', 'ok'][rank(v)]
+
+  // Voiture prêtée ou rendue : sa carte glisse vers sa nouvelle place et affiche une coche un instant
+  const gridRef = useRef<HTMLDivElement>(null)
+  const avant = useRef<Map<string, { etat: string; x: number; y: number }> | null>(null)
+  const [flash, setFlash] = useState<string[]>([])
+  const flashTimer = useRef(0)
+  const cle = vs.map((v) => v.id + etat(v)).join()
+  useLayoutEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return
+    const apres = new Map<string, { etat: string; x: number; y: number }>()
+    const changees: string[] = []
+    grid.querySelectorAll<HTMLElement>('[data-id]').forEach((el) => {
+      const id = el.dataset.id!
+      const e = { etat: el.dataset.etat!, x: el.offsetLeft, y: el.offsetTop }
+      const a = avant.current?.get(id)
+      if (a && (a.x !== e.x || a.y !== e.y)) {
+        el.animate([{ transform: `translate(${a.x - e.x}px, ${a.y - e.y}px)` }, { transform: 'none' }], { duration: 450, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' })
+      }
+      if (a && a.etat !== e.etat) changees.push(id)
+      apres.set(id, e)
+    })
+    avant.current = apres
+    if (changees.length) {
+      setFlash(changees)
+      clearTimeout(flashTimer.current)
+      flashTimer.current = window.setTimeout(() => setFlash([]), 1600)
+    }
+  }, [cle])
+
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
@@ -58,10 +90,11 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
           offline && <div className="offline">Pas de connexion : la liste n'est peut-être pas à jour.</div>
         )}
       </header>
-      <div className={'grid' + (first ? ' first' : '')}>
+      <div ref={gridRef} className={'grid' + (first ? ' first' : '')}>
         {vs.map((v) => {
           const p = actifs.get(v.id)
-          return p ? <Out key={v.id} v={v} p={p} onClick={() => onVoir(p)} /> : <Dispo key={v.id} v={v} onClick={() => onPreter(v)} />
+          const fl = flash.includes(v.id)
+          return p ? <Out key={v.id} v={v} p={p} flash={fl} onClick={() => onVoir(p)} /> : <Dispo key={v.id} v={v} flash={fl} onClick={() => onPreter(v)} />
         })}
         {/* Ajouter une voiture se fait dans « Le parc » ; ici seulement tant que le parc est vide */}
         {vs.length === 0 && (
@@ -84,12 +117,13 @@ export function Avatar({ moi, onClick }: { moi: string; onClick: () => void }) {
   )
 }
 
-function Dispo({ v, onClick }: { v: Vehicule; onClick: () => void }) {
+function Dispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: () => void }) {
   return (
-    <button className="tile t-ok" onClick={onClick} aria-label={`${v.nom}, dispo. Toucher pour prêter`}>
+    <button className={'tile t-ok' + (flash ? ' flash' : '')} data-id={v.id} data-etat="ok" onClick={onClick} aria-label={`${v.nom}, dispo. Toucher pour prêter`}>
       <span className="top">
         <span className="ico">
           <Logo nom={v.nom} />
+          {flash && <Done />}
         </span>
         <span className="st">Dispo</span>
       </span>
@@ -106,15 +140,22 @@ function Dispo({ v, onClick }: { v: Vehicule; onClick: () => void }) {
   )
 }
 
-function Out({ v, p, onClick }: { v: Vehicule; p: Pret; onClick: () => void }) {
+function Out({ v, p, flash, onClick }: { v: Vehicule; p: Pret; flash: boolean; onClick: () => void }) {
   const late = isLate(p)
   const n = days(p.depart, Date.now())
   const since = late ? 'Prévue le ' + fmtS(p.retour_prevu!) : n <= 0 ? "Depuis aujourd'hui" : n === 1 ? 'Depuis hier' : `Depuis ${n} jours`
   return (
-    <button className={'tile ' + (late ? 't-late' : 't-out')} onClick={onClick} aria-label={`${v.nom}, ${late ? 'en retard' : 'prêtée'} à ${p.client}`}>
+    <button
+      className={'tile ' + (late ? 't-late' : 't-out') + (flash ? ' flash' : '')}
+      data-id={v.id}
+      data-etat={late ? 'late' : 'out'}
+      onClick={onClick}
+      aria-label={`${v.nom}, ${late ? 'en retard' : 'prêtée'} à ${p.client}`}
+    >
       <span className="top">
         <span className="ico">
           <Logo nom={v.nom} />
+          {flash && <Done />}
         </span>
         <span className="st">
           {late && <Warn />}
@@ -136,3 +177,10 @@ function Out({ v, p, onClick }: { v: Vehicule; p: Pret; onClick: () => void }) {
     </button>
   )
 }
+
+// Coche posée un instant sur le logo quand la voiture change d'état
+const Done = () => (
+  <span className="done">
+    <Check />
+  </span>
+)
