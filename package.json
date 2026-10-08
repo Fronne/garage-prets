@@ -9,17 +9,20 @@
     "build": "vite build",
     "typecheck": "tsc -p . && tsc -p worker",
     "icons": "node scripts/gen-icons.mjs",
-    "apk": "cd android && .\\gradlew.bat assembleRelease",
+    "apk": "vite build && cap sync android && cd android && .\\gradlew.bat assembleRelease",
     "db:remote": "wrangler d1 migrations apply garage-prets --remote",
     "deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/core": "^7.6.9",
     "@fontsource-variable/plus-jakarta-sans": "^5.1.0",
     "hono": "^4.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.9",
     "@cloudflare/workers-types": "^4.20250124.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/react": "^18.3.12",

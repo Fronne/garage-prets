@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Mêmes teintes que les jetons de src/styles.css -->
-<resources>
-    <color name="brand">#111827</color>
-    <!-- Barres du téléphone : le fond du site (jeton bg) -->
-    <color name="bars">#f7f8fa</color>
-</resources>

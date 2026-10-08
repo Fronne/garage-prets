@@ -10,11 +10,6 @@
       "database_id": "b1cdfba4-734c-41bf-a7c9-112ece393930",
       "migrations_dir": "migrations"
     }
-  ],
-  "vars": {
-    // Empreinte SHA-256 de la clé qui signe l'APK (keytool -list -v -keystore ...).
-    // Celle-ci est la clé du calendrier partagé : la même clé peut signer les deux applications.
-    "ANDROID_SHA256": "A1:92:49:F3:5C:49:6B:31:EF:8E:08:58:9B:D3:9B:18:AA:22:0C:BE:22:63:67:15:18:31:66:34:22:E5:41:44"
-  }
+  ]
   // Secret (wrangler secret put / .dev.vars en local) : GARAGE_CODE, le code que tout le garage tape une fois
 }

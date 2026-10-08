@@ -8,30 +8,47 @@ const CAR =
   '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>' +
   '<circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>'
 
-// `scale` : part de la largeur occupée par la voiture ; `bg` : couleur de fond ou null (transparent)
-function svg({ scale, bg, radius = 0 }) {
-  const s = 24 / scale
-  const o = (s - 24) / 2
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-o} ${-o + 0.6} ${s} ${s}">
-    ${bg ? `<rect x="${-o}" y="${-o + 0.6}" width="${s}" height="${s}" rx="${radius * s}" fill="${bg}"/>` : ''}
-    <g fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${CAR}</g>
+// Image w × h ; la voiture occupe `scale` du plus petit côté. `shape` : 'square', 'rounded', 'circle' ou null (fond transparent)
+function svg(w, h, scale, shape) {
+  const unit = (Math.min(w, h) * scale) / 24 // pixels par unité du dessin 24 × 24
+  const x = (w - 24 * unit) / 2
+  const y = (h - 24 * unit) / 2 + 0.6 * unit // la voiture est un peu haute dans son carré
+  const bg =
+    shape === 'circle'
+      ? `<circle cx="${w / 2}" cy="${h / 2}" r="${w / 2}" fill="${INK}"/>`
+      : shape
+        ? `<rect width="${w}" height="${h}" rx="${shape === 'rounded' ? w * 0.22 : 0}" fill="${INK}"/>`
+        : ''
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">${bg}
+    <g transform="translate(${x} ${y}) scale(${unit})" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${CAR}</g>
   </svg>`
 }
 
-const png = (size, opts) => new Resvg(svg(opts), { fitTo: { mode: 'width', value: size } }).render().asPng()
-
-// Android : avant-plan transparent (le fond vient de @color/brand), la voiture dans la zone visible des icônes rondes
-const ANDROID = 'android/app/src/main/res/drawable-nodpi'
 const files = [
-  ['public/icon-192.png', 192, { scale: 0.62, bg: INK, radius: 0.22 }],
-  ['public/icon-512.png', 512, { scale: 0.62, bg: INK, radius: 0.22 }],
-  ['public/icon-maskable.png', 512, { scale: 0.5, bg: INK }],
-  ['public/apple-touch-icon.png', 180, { scale: 0.6, bg: INK }],
-  [`${ANDROID}/ic_launcher_foreground.png`, 432, { scale: 0.42, bg: null }],
-  [`${ANDROID}/splash.png`, 512, { scale: 0.5, bg: null }],
+  ['public/icon-192.png', 192, 192, 0.62, 'rounded'],
+  ['public/icon-512.png', 512, 512, 0.62, 'rounded'],
+  ['public/icon-maskable.png', 512, 512, 0.5, 'square'],
+  ['public/apple-touch-icon.png', 180, 180, 0.6, 'square'],
 ]
-for (const [path, size, opts] of files) {
-  mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(path, png(size, opts))
-  console.log(path)
+
+// Android : icône classique, ronde, et avant-plan transparent des icônes adaptatives (fond : ic_launcher_background)
+const RES = 'android/app/src/main/res'
+const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 }
+for (const [d, k] of Object.entries(DENSITIES)) {
+  files.push([`${RES}/mipmap-${d}/ic_launcher.png`, 48 * k, 48 * k, 0.62, 'rounded'])
+  files.push([`${RES}/mipmap-${d}/ic_launcher_round.png`, 48 * k, 48 * k, 0.58, 'circle'])
+  files.push([`${RES}/mipmap-${d}/ic_launcher_foreground.png`, 108 * k, 108 * k, 0.42, null])
 }
+// Écran de démarrage
+const SPLASH = { mdpi: [320, 480], hdpi: [480, 800], xhdpi: [720, 1280], xxhdpi: [960, 1600], xxxhdpi: [1280, 1920] }
+files.push([`${RES}/drawable/splash.png`, 480, 320, 0.3, 'square'])
+for (const [d, [w, h]] of Object.entries(SPLASH)) {
+  files.push([`${RES}/drawable-port-${d}/splash.png`, w, h, 0.3, 'square'])
+  files.push([`${RES}/drawable-land-${d}/splash.png`, h, w, 0.3, 'square'])
+}
+
+for (const [path, w, h, scale, shape] of files) {
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, new Resvg(svg(w, h, scale, shape)).render().asPng())
+}
+console.log(files.length + ' icônes écrites')

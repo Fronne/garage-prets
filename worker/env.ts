@@ -1,7 +1,6 @@
 export interface Env {
   DB: D1Database
   ASSETS: Fetcher
-  ANDROID_SHA256: string
   GARAGE_CODE?: string
 }
 

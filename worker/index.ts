@@ -40,20 +40,6 @@ app.onError((err, c) => {
   return c.json({ error: 'Erreur du serveur.' }, 500)
 })
 
-// Autorise l'application Android signée avec cette clé à afficher le site en plein écran, sans barre d'adresse
-app.get('/.well-known/assetlinks.json', (c) =>
-  c.json([
-    {
-      relation: ['delegate_permission/common.handle_all_urls'],
-      target: {
-        namespace: 'android_app',
-        package_name: 'app.garageprets',
-        sha256_cert_fingerprints: [c.env.ANDROID_SHA256],
-      },
-    },
-  ]),
-)
-
 app.post('/api/login', async (c) => {
   const env = c.env
   if (!env.GARAGE_CODE) throw new HttpError(500, "Le code du garage n'est pas configuré sur le serveur.")

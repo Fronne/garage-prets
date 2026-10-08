@@ -21,7 +21,7 @@ Chaque téléphone se connecte une fois avec le **code du garage** et un prénom
 | Serveur (API) | `worker/` | Cloudflare Workers, Hono, base D1 (SQLite) |
 | Types communs | `shared/` | TypeScript |
 | Schéma de la base | `migrations/` | SQL |
-| Application Android | `android/` | Trusted Web Activity (le site en plein écran) |
+| Application Android | `android/` | Capacitor (le site affiché dans l'appli, comme la liste de courses) |
 
 Le Worker sert à la fois le site (dossier `dist/`) et l'API sous `/api`. Sur iPhone, l'application s'installe depuis Safari (« Sur l'écran d'accueil »).
 
@@ -63,11 +63,13 @@ Quand une migration est ajoutée, lancer `npm run db:remote` avant `npm run depl
 
 ## Application Android
 
-L'application affiche le site en plein écran ; l'adresse est fixée dans `android/app/build.gradle` (`host`).
+L'application Android est une coquille [Capacitor](https://capacitorjs.com) qui affiche le site en ligne (adresse dans `capacitor.config.json`, sous `server.url`). Elle n'utilise pas Chrome : pas de barre de remplissage automatique de Chrome au-dessus du clavier. Après un `npm run deploy`, il suffit de relancer l'appli pour avoir la nouvelle version (parfois au deuxième lancement). Un nouvel APK n'est nécessaire que si la partie Android change (icônes, adresse du site, module Capacitor).
 
-La signature utilise `android/keystore.properties` et `android/keystore/`, qui ne sont pas dans le dépôt. La clé du calendrier partagé peut servir : copier ces deux éléments depuis ce projet, puis `npm run apk`. L'APK se trouve dans `android/app/build/outputs/apk/release/`.
+Il faut le kit Android (Android SDK) ; son emplacement est écrit dans `android/local.properties` (`sdk.dir=...`), à copier depuis un autre projet Android.
 
-Pour que l'appli s'ouvre sans barre d'adresse, l'empreinte SHA-256 de la clé doit être celle de `ANDROID_SHA256` dans `wrangler.jsonc` (déjà réglée sur la clé du calendrier). Avec une autre clé, la remplacer par le résultat de `keytool -list -v -keystore <fichier>` et redéployer.
+`npm run apk` fabrique `android/app/build/outputs/apk/release/app-release.apk`. La signature utilise `android/keystore.properties` et `android/keystore/`, qui ne sont pas dans le dépôt (la clé du calendrier partagé convient). Sans eux, l'APK est signé avec la clé de test de l'ordinateur : il s'installe, mais une mise à jour construite sur un autre ordinateur devra d'abord désinstaller l'ancienne.
+
+Les icônes Android sont produites par `npm run icons`, comme celles du site.
 
 ## Ce qui n'est pas dans le dépôt
 
