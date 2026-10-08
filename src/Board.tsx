@@ -15,6 +15,8 @@ type Props = {
   onMoi: () => void
 }
 
+let dejaPulse = false
+
 export function Board({ data, offline, attente, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   // En retard, puis prêtées (la plus ancienne d'abord), puis dispo
@@ -63,6 +65,9 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
     }
   }, [cle])
 
+  // « Retard » pulse une seule fois, à l'ouverture de l'appli
+  const [pulse] = useState(() => !dejaPulse && (dejaPulse = true))
+
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
@@ -76,11 +81,23 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
           <Avatar moi={data.moi} onClick={onMoi} />
         </div>
         <div className="counts">
-          <span className="count c-ok">{vs.length - nOut} dispo</span>
-          <span className="count c-out">
-            {nOut} prêtée{nOut > 1 ? 's' : ''}
+          <span className="count c-ok">
+            <span>
+              <Num n={vs.length - nOut} /> dispo
+            </span>
           </span>
-          {nLate > 0 && <span className="count c-late">{nLate} en retard</span>}
+          <span className="count c-out">
+            <span>
+              <Num n={nOut} /> prêtée{nOut > 1 ? 's' : ''}
+            </span>
+          </span>
+          {nLate > 0 && (
+            <span className="count c-late">
+              <span>
+                <Num n={nLate} /> en retard
+              </span>
+            </span>
+          )}
         </div>
         {attente > 0 ? (
           <div className="offline">
@@ -90,7 +107,7 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
           offline && <div className="offline">Pas de connexion : la liste n'est peut-être pas à jour.</div>
         )}
       </header>
-      <div ref={gridRef} className={'grid' + (first ? ' first' : '')}>
+      <div ref={gridRef} className={'grid' + (first ? ' first' : '') + (pulse ? ' pulse' : '')}>
         {vs.map((v) => {
           const p = actifs.get(v.id)
           const fl = flash.includes(v.id)
@@ -182,5 +199,12 @@ function Out({ v, p, flash, onClick }: { v: Vehicule; p: Pret; flash: boolean; o
 const Done = () => (
   <span className="done">
     <Check />
+  </span>
+)
+
+// Chiffre d'un compteur : il bascule quand il change
+const Num = ({ n }: { n: number }) => (
+  <span key={n} className="num">
+    {n}
   </span>
 )
