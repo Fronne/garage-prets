@@ -12,7 +12,9 @@
     "apk": "vite build && cap sync android && cd android && .\\gradlew.bat assembleRelease",
     "db:remote": "wrangler d1 migrations apply garage-prets --remote",
     "deploy": "vite build && wrangler deploy",
-    "cle": "node scripts/cle-appli.mjs"
+    "cle": "node scripts/cle-appli.mjs",
+    "demo": "wrangler d1 execute garage-prets --remote --file scripts/demo/ajouter.sql -y",
+    "demo:effacer": "wrangler d1 execute garage-prets --remote --file scripts/demo/effacer.sql -y"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.9",
