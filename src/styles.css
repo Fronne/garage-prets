@@ -200,3 +200,7 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 
 /* Logo de la marque à la place de la petite voiture */
 .ico svg.i.brand { width: 24px; height: 24px; fill: currentColor; stroke: none }
+/* Question « Enregistrer ? » : la fenêtre descend hors de l'écran et remonte si on continue */
+.sheet { transition: transform 200ms var(--ease) }
+.sheet.away { transform: translateY(110%) }
+.scrim.closing .sheet.away { animation: none }

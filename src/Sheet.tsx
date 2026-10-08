@@ -10,7 +10,7 @@ export type Ask = { dirty: boolean; save: () => boolean; saveLabel: string; disc
 const RequestClose = createContext<() => void>(() => {})
 
 // Fenêtre qui monte du bas de l'écran. On la ferme par la croix, en touchant le fond ou en la faisant glisser vers le bas ;
-// s'il y a des modifications, elle demande d'abord s'il faut les enregistrer. Elle rend le focus à la carte d'origine.
+// s'il y a des modifications, elle descend puis demande s'il faut les enregistrer (« Continuer à modifier » la fait remonter). Elle rend le focus à la carte d'origine.
 export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: Ask; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false)
   const [asking, setAsking] = useState(false)
@@ -23,7 +23,12 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
     setClosing(true)
     setTimeout(onClose, 140)
   }
-  const request = () => (ask?.dirty ? setAsking(true) : close())
+  // Le clavier se ferme pendant la question
+  const askNow = () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    setAsking(true)
+  }
+  const request = () => (ask?.dirty ? askNow() : close())
 
   // Glisser vers le bas depuis le haut de la fenêtre la ferme
   const drag = useRef<{ y0: number; dy: number; t0: number } | null>(null)
@@ -54,8 +59,9 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
       setTimeout(onClose, 160)
       return
     }
+    // Avec des modifications : la fenêtre descend quand même, puis la question s'affiche
     el.style.transform = ''
-    if (d.dy > 110 || fast) setAsking(true)
+    if (d.dy > 110 || fast) askNow()
   }
 
   // Échap ferme la fenêtre ; la référence suit la dernière version sans réabonner l'écouteur
@@ -102,7 +108,7 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
       <div
         ref={sheetRef}
         tabIndex={-1}
-        className="sheet"
+        className={'sheet' + (asking ? ' away' : '')}
         role="dialog"
         aria-modal="true"
         aria-labelledby="sheet-title"
