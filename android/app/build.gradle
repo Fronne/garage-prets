@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Adresse du site affiché par l'application
+def host = 'garage-prets.dofus-craft.workers.dev'
+
+def keys = new Properties()
+def keysFile = rootProject.file('keystore.properties')
+if (keysFile.exists()) keysFile.withInputStream { keys.load(it) }
+
+android {
+    namespace 'app.garageprets'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.garageprets'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+
+        manifestPlaceholders = [host: host]
+        resValue 'string', 'launch_url', "https://${host}/"
+        // Déclare le lien entre l'application et le site (l'autre moitié : /.well-known/assetlinks.json, dans worker/index.ts)
+        resValue 'string', 'asset_statements',
+                '[{ \\"relation\\": [\\"delegate_permission/common.handle_all_urls\\"],' +
+                ' \\"target\\": { \\"namespace\\": \\"web\\", \\"site\\": \\"https://' + host + '\\" } }]'
+    }
+
+    signingConfigs {
+        release {
+            if (keysFile.exists()) {
+                storeFile rootProject.file(keys['storeFile'])
+                storePassword keys['storePassword']
+                keyAlias keys['keyAlias']
+                keyPassword keys['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
