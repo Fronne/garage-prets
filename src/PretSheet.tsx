@@ -148,7 +148,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <input
                   className="inp sm"
                   id="note"
-                  placeholder="Sa voiture en atelier, rayure déjà là…"
+                  placeholder="Exemple : sa voiture en atelier, rayure déjà là"
                   value={d.note}
                   onChange={(e) => set({ note: e.target.value })}
                 />
