@@ -1,0 +1,46 @@
+# Met l'appli en ligne sur Cloudflare à chaque envoi sur main.
+# Il faut le secret CLOUDFLARE_API_TOKEN dans le dépôt (Settings > Secrets and variables > Actions) ;
+# sans lui, le travail s'arrête sans erreur. GARAGE_CODE, s'il est présent, met aussi à jour le code du garage.
+name: Mise en ligne
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency: deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GARAGE_CODE: ${{ secrets.GARAGE_CODE }}
+    steps:
+      - name: Jeton Cloudflare présent ?
+        id: check
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::Secret CLOUDFLARE_API_TOKEN absent : mise en ligne ignorée."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.check.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.check.outputs.ok == 'true'
+        run: npm ci
+      - name: Base de données
+        if: steps.check.outputs.ok == 'true'
+        run: npx wrangler d1 migrations apply garage-prets --remote
+      - name: Mise en ligne
+        if: steps.check.outputs.ok == 'true'
+        run: npm run deploy
+      - name: Code du garage
+        if: steps.check.outputs.ok == 'true' && env.GARAGE_CODE != ''
+        run: printf '%s' "$GARAGE_CODE" | npx wrangler secret put GARAGE_CODE

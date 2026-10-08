@@ -57,6 +57,10 @@ npm run dev
 
 Quand une migration est ajoutée, lancer `npm run db:remote` avant `npm run deploy`.
 
+## Mise en ligne automatique (GitHub Actions)
+
+À chaque envoi sur `main`, `.github/workflows/deploy.yml` applique les migrations et met l'appli en ligne, à condition que le dépôt ait le secret `CLOUDFLARE_API_TOKEN` (jeton Cloudflare créé avec le modèle « Edit Cloudflare Workers », avec en plus le droit D1 Edit). Le secret `GARAGE_CODE`, s'il existe, met aussi à jour le code du garage.
+
 ## Application Android
 
 L'application affiche le site en plein écran ; l'adresse est fixée dans `android/app/build.gradle` (`host`).
