@@ -15,15 +15,22 @@ export function Sheet({ onClose, children }: { onClose: () => void; children: (c
     setTimeout(onClose, 140)
   }
 
+  // Échap ferme la fenêtre ; la référence suit la dernière version de close sans réabonner l'écouteur
+  const closeRef = useRef(close)
+  closeRef.current = close
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
     document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Rend le focus à la carte d'origine seulement à la fermeture, pas à chaque mise à jour (sinon le clavier se ferme à chaque lettre)
+  useEffect(() => {
     const el = back.current
     return () => {
-      document.removeEventListener('keydown', onKey)
       if (el instanceof HTMLElement && document.body.contains(el)) el.focus()
     }
-  })
+  }, [])
 
   return (
     <div className={'scrim' + (closing ? ' closing' : '')} onClick={(e) => e.target === e.currentTarget && close()}>
