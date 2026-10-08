@@ -9,6 +9,7 @@ import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
+import { enAttente, envoyer, vider } from './envois'
 import { Car, Clock, List } from './icons'
 import { Historique } from './Historique'
 
@@ -57,23 +58,46 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   // « Le parc » et « Historique » sont des pages à part : le bouton retour du téléphone ramène à l'accueil
   const [page, setPage] = useState<Page>('prets')
   useEffect(() => {
-    const onPop = () => setPage(history.state?.page ?? 'prets')
+    const onPop = () => {
+      // Retour du téléphone avec une fenêtre ouverte : on remet l'étape et la fenêtre décide (fermer, ou demander s'il faut enregistrer)
+      if (sheetOpen.current && !history.state?.sheet) {
+        history.pushState({ ...history.state, sheet: true }, '')
+        return window.dispatchEvent(new Event('sheet-back'))
+      }
+      setPage(history.state?.page ?? 'prets')
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+  // Une fenêtre ouverte ajoute une étape à l'historique du téléphone : le geste retour la ferme au lieu de quitter l'appli
+  const sheetOpen = useRef(false)
+  sheetOpen.current = sheet !== null
+  useEffect(() => {
+    if (sheet === null) return
+    history.pushState({ ...history.state, sheet: true }, '')
+    return () => {
+      if (history.state?.sheet) history.back()
+    }
+  }, [sheet === null])
   const drafts = useRef<Record<string, Draft>>({})
   const toastTimer = useRef<ReturnType<typeof setTimeout>>()
   // Pendant un enregistrement, une synchronisation en cours ne doit pas écraser ce qu'on vient de faire
   const pending = useRef(0)
 
+  const [attente, setAttente] = useState(enAttente)
+
   const sync = useCallback(async () => {
     if (pending.current) return
     try {
+      // D'abord ce qui attend sur le téléphone ; tant qu'il en reste, on garde l'écran tel quel
+      const refus = await vider()
+      if (refus.length) showToastRef.current({ msg: refus[0], error: true })
+      setAttente(enAttente())
+      if (enAttente()) return setOffline(true)
       const d = await api<SyncData>('/sync')
       if (pending.current) return
       setData(d)
       setOffline(false)
-      localStorage.setItem(CACHE_KEY, JSON.stringify(d))
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) return onLogout()
       setOffline(true)
@@ -100,14 +124,25 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     setToast(t)
     if (t) toastTimer.current = setTimeout(() => setToast(null), t.undo ? 5000 : 3500)
   }
+  const showToastRef = useRef(showToast)
+  showToastRef.current = showToast
+
+  // L'écran est gardé sur le téléphone à chaque changement : rouvert sans réseau, il montre ce qu'on vient de faire
+  useEffect(() => {
+    if (data) localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+  }, [data])
 
   // Change l'écran tout de suite, puis enregistre ; en cas d'échec on recharge l'état du serveur
-  async function change(local: (d: SyncData) => SyncData, remote: () => Promise<unknown>, done?: Toast) {
+  // Sans réseau, l'enregistrement attend sur le téléphone et part tout seul dès que le réseau revient
+  async function change(local: (d: SyncData) => SyncData, remote: () => Promise<boolean>, done?: Toast) {
     setData((d) => (d ? local(d) : d))
     if (done) showToast(done)
     pending.current++
     try {
-      await remote()
+      if (!(await remote())) {
+        setAttente(enAttente())
+        showToast({ ...done, msg: (done ? done.msg + '. ' : '') + 'Pas de réseau : envoi dès son retour.' })
+      }
     } catch (e) {
       showToast({ msg: errorText(e), error: true })
     } finally {
@@ -119,7 +154,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   if (!data) {
     return (
       <main className="wrap">
-        <h1>Qui a quoi ?</h1>
+        <h1>Voitures de prêt</h1>
         <p className="auto">{offline ? 'Pas de connexion internet.' : 'Chargement…'}</p>
       </main>
     )
@@ -146,24 +181,24 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     }
     delete drafts.current[v.id]
     buzz()
-    change(setPrets((ps) => [p, ...ps]), () => api('/prets', 'POST', p), {
+    change(setPrets((ps) => [p, ...ps]), () => envoyer('/prets', 'POST', p), {
       msg: `${v.nom} prêtée à ${p.client}`,
-      undo: () => change(setPrets((ps) => ps.filter((x) => x.id !== p.id)), () => api('/prets/' + p.id, 'DELETE')),
+      undo: () => change(setPrets((ps) => ps.filter((x) => x.id !== p.id)), () => envoyer('/prets/' + p.id, 'DELETE')),
     })
   }
 
   function modifier(p: Pret, d: Draft) {
     const patch = { client: d.client.trim(), tel: d.tel.trim() || null, note: d.note.trim() || null, retour_prevu: d.retour || null }
-    change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, ...patch } : x))), () => api('/prets/' + p.id, 'PUT', patch), { msg: 'Prêt modifié' })
+    change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, ...patch } : x))), () => envoyer('/prets/' + p.id, 'PUT', patch), { msg: 'Prêt modifié' })
   }
 
   function rendue(p: Pret, v: Vehicule) {
     const at = new Date().toISOString()
     buzz()
-    change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at } : x))), () => api(`/prets/${p.id}/retour`, 'POST', {}), {
+    change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at } : x))), () => envoyer(`/prets/${p.id}/retour`, 'POST', { at }), {
       msg: `${v.nom} rendue`,
       undo: () =>
-        change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: null } : x))), () => api(`/prets/${p.id}/annuler-retour`, 'POST')),
+        change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: null } : x))), () => envoyer(`/prets/${p.id}/annuler-retour`, 'POST')),
     })
   }
 
@@ -171,16 +206,16 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     const im = immat ? immat.toUpperCase() : null
     if (v) {
       change((d) => ({ ...d, vehicules: d.vehicules.map((x) => (x.id === v.id ? { ...x, nom, immat: im } : x)) }), () =>
-        api('/vehicules/' + v.id, 'PUT', { nom, immat: im }),
+        envoyer('/vehicules/' + v.id, 'PUT', { nom, immat: im }),
       )
     } else {
       const nv = { id: crypto.randomUUID(), nom, immat: im }
-      change((d) => ({ ...d, vehicules: [...d.vehicules, nv] }), () => api('/vehicules', 'POST', nv), { msg: nom + ' ajoutée' })
+      change((d) => ({ ...d, vehicules: [...d.vehicules, nv] }), () => envoyer('/vehicules', 'POST', nv), { msg: nom + ' ajoutée' })
     }
   }
 
   function retirer(v: Vehicule) {
-    change((d) => ({ ...d, vehicules: d.vehicules.filter((x) => x.id !== v.id) }), () => api('/vehicules/' + v.id, 'DELETE'), {
+    change((d) => ({ ...d, vehicules: d.vehicules.filter((x) => x.id !== v.id) }), () => envoyer('/vehicules/' + v.id, 'DELETE'), {
       msg: v.nom + ' retirée du parc',
     })
   }
@@ -261,6 +296,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         <Board
           data={data}
           offline={offline}
+          attente={attente}
           first={first}
           onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
           onVoir={(p) => setSheet({ kind: 'voir', pid: p.id })}

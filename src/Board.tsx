@@ -6,6 +6,7 @@ import { days, fmtS, isLate } from './util'
 type Props = {
   data: SyncData
   offline: boolean
+  attente: number
   first: boolean
   onPreter: (v: Vehicule) => void
   onVoir: (p: Pret) => void
@@ -13,7 +14,7 @@ type Props = {
   onMoi: () => void
 }
 
-export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
+export function Board({ data, offline, attente, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   // En retard, puis prêtées (la plus ancienne d'abord), puis dispo
   const rank = (v: Vehicule) => {
@@ -49,7 +50,13 @@ export function Board({ data, offline, first, onPreter, onVoir, onAjouter, onMoi
           </span>
           {nLate > 0 && <span className="count c-late">{nLate} en retard</span>}
         </div>
-        {offline && <div className="offline">Pas de connexion : la liste n'est peut-être pas à jour.</div>}
+        {attente > 0 ? (
+          <div className="offline">
+            Pas de réseau : {attente} enregistrement{attente > 1 ? 's' : ''} en attente, envoi dès que le réseau revient.
+          </div>
+        ) : (
+          offline && <div className="offline">Pas de connexion : la liste n'est peut-être pas à jour.</div>
+        )}
       </header>
       <div className={'grid' + (first ? ' first' : '')}>
         {vs.map((v) => {

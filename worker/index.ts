@@ -31,6 +31,14 @@ const optText = (v: unknown, max: number) => text(v, max) || null
 // Le téléphone choisit l'identifiant : renvoyer deux fois la même création (réseau instable) ne crée pas de doublon
 const idFrom = (v: unknown) => (typeof v === 'string' && UUID.test(v) ? v : crypto.randomUUID())
 const now = () => new Date().toISOString()
+// Heure donnée par le téléphone : un prêt ou un retour noté sans réseau garde son heure réelle. Plus de 14 jours ou dans le futur : on prend l'heure du serveur.
+function heureTel(v: unknown, auPlusTot?: string): string {
+  const t = Date.parse(String(v ?? ''))
+  const n = Date.now()
+  if (!Number.isFinite(t) || t > n + 60_000 || t < n - 14 * 86_400_000) return now()
+  const min = auPlusTot ? Date.parse(auPlusTot) : 0
+  return new Date(Math.max(Math.min(t, n), min)).toISOString()
+}
 
 const app = new Hono<App>()
 
@@ -194,11 +202,12 @@ app.post('/api/prets', async (c) => {
   const deja = await c.env.DB.prepare('SELECT id FROM prets WHERE vehicule_id = ? AND retour IS NULL').bind(vehiculeId).first<string>('id')
   if (deja === id) return c.json({ id })
   if (deja) throw new HttpError(409, 'Cette voiture vient d’être prêtée par quelqu’un d’autre.')
+  // ON CONFLICT : un prêt renvoyé deux fois (réseau coupé pendant la réponse) n'est enregistré qu'une fois
   await c.env.DB.prepare(
     `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, photo_depart, par)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`,
   )
-    .bind(id, vehiculeId, f.client, f.tel, f.note, now(), f.retourPrevu, optText(b.photo_depart, 40), c.get('prenom'))
+    .bind(id, vehiculeId, f.client, f.tel, f.note, heureTel(b.depart), f.retourPrevu, optText(b.photo_depart, 40), c.get('prenom'))
     .run()
   return c.json({ id })
 })
@@ -213,8 +222,9 @@ app.put('/api/prets/:id', async (c) => {
 
 app.post('/api/prets/:id/retour', async (c) => {
   const b = await c.req.json().catch(() => ({}))
+  const depart = await c.env.DB.prepare('SELECT depart FROM prets WHERE id = ?').bind(c.req.param('id')).first<string>('depart')
   await c.env.DB.prepare('UPDATE prets SET retour = ?, photo_retour = COALESCE(?, photo_retour), maj_le = ? WHERE id = ? AND retour IS NULL')
-    .bind(now(), optText(b.photo_retour, 40), now(), c.req.param('id'))
+    .bind(heureTel(b.at, depart ?? undefined), optText(b.photo_retour, 40), now(), c.req.param('id'))
     .run()
   return c.json({ ok: true })
 })

@@ -69,8 +69,14 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
   closeRef.current = asking ? () => setAsking(false) : request
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
+    // Geste retour du téléphone (voir App) : comme Échap
+    const onBack = () => closeRef.current()
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    window.addEventListener('sheet-back', onBack)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener('sheet-back', onBack)
+    }
   }, [])
 
   // Le focus va sur la fenêtre elle-même, pas sur un champ : le clavier ne s'ouvre que si on touche un champ

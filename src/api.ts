@@ -26,6 +26,8 @@ async function call(path: string, method: string, body?: unknown): Promise<Respo
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      // Réseau qui ne répond pas (atelier, sous-sol) : on abandonne et le prêt part dans la file d'attente
+      signal: AbortSignal.timeout?.(15_000),
     })
   } catch {
     throw new ApiError(0, 'Pas de connexion internet.')
