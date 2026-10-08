@@ -174,3 +174,11 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .pc-nm { font-weight: 700; font-size: 1.0625rem; overflow-wrap: anywhere }
 .pc-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.875rem; color: var(--muted) }
 .parc button > svg { color: var(--muted) }
+
+/* Saisie de la plaque en trois cases */
+.plate-in { display: flex; align-items: center; gap: 6px }
+.plate-in .eu { flex: none; align-self: stretch; display: flex; align-items: flex-end; justify-content: center; width: 28px; padding-bottom: 8px; border-radius: 8px; background: var(--eu); color: var(--on-eu); font-weight: 700; font-size: 0.8125rem }
+.plate-in .dash { color: var(--muted); font-weight: 700 }
+.plate-box { min-width: 0; flex: 2; text-align: center; padding: 0 4px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-variant-numeric: tabular-nums }
+.plate-box.num { flex: 3 }
+.plate-box::placeholder { color: #c4c8cf; font-weight: 600 }

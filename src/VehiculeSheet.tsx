@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { Vehicule } from '../shared/types'
 import { Check } from './icons'
 import { Sheet, SheetHead } from './Sheet'
-import { formatPlate } from './util'
+import { PlateInput } from './PlateInput'
 
 type Props = {
   v?: Vehicule
@@ -53,16 +53,7 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
             <label className="sub" htmlFor="immat">
               Plaque (facultatif)
             </label>
-            <input
-              className="inp sm"
-              id="immat"
-              autoComplete="off"
-              autoCapitalize="characters"
-              placeholder="AB-123-CD"
-              maxLength={12}
-              value={immat}
-              onChange={(e) => setImmat(formatPlate(e.target.value))}
-            />
+            <PlateInput value={immat} onChange={setImmat} />
             <button className="cta" type="submit">
               <Check />
               {v ? 'Enregistrer' : 'Ajouter la voiture'}
