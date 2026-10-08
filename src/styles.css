@@ -233,3 +233,26 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .h-who { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line) }
 .h-client { font-size: 1.125rem; font-weight: 800; overflow-wrap: anywhere }
 .btn.call.sm { width: 44px; height: 44px }
+
+/* Calendrier de l'appli */
+.date-btn { width: 100%; min-height: 50px; display: flex; align-items: center; gap: 10px; padding: 0 16px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); font: inherit; font-size: 1.0625rem; text-align: left; cursor: pointer }
+.date-btn.set { color: var(--ink); font-weight: 600 }
+.date-btn span::first-letter { text-transform: uppercase }
+.finder-row .date-btn { flex: 1 }
+.cal-scrim { position: fixed; inset: 0; z-index: 30; background: rgba(17, 24, 39, 0.35); display: flex; align-items: flex-end; justify-content: center; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) }
+.cal { width: 100%; max-width: 24rem; background: var(--surface); border-radius: 24px; padding: 16px 12px 8px; box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25) }
+.cal-hd { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px }
+.cal-t { font-size: 1.125rem; font-weight: 800 }
+.cal-t::first-letter { text-transform: uppercase }
+.cal-nav { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer }
+.cal-nav:disabled { opacity: 0.3; cursor: default }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; justify-items: center }
+.cal-dow { font-size: 0.75rem; font-weight: 700; color: var(--muted); padding: 4px 0 }
+.cal-d { width: 44px; height: 44px; border-radius: 50%; border: 0; background: none; color: var(--ink); font: inherit; font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer }
+.cal-d.auj { box-shadow: inset 0 0 0 2px var(--line); font-weight: 800 }
+.cal-d.sel { background: var(--ink); color: var(--surface); box-shadow: none }
+.cal-d:disabled { color: #c4c8d0; cursor: default }
+.cal-ft { display: flex; justify-content: space-between; gap: 8px; padding: 8px 4px 0; border-top: 1px solid var(--line); margin-top: 8px }
+@media (prefers-reduced-motion: no-preference) { .cal { animation: up 180ms var(--ease) } .cal-scrim { animation: fade 180ms var(--ease) } }
+/* Fenêtre longue : elle défile au lieu d'écraser son contenu (la plaque était tassée) */
+.sheet > * { flex-shrink: 0 }

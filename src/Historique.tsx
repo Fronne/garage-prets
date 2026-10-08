@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import type { LigneHisto } from '../shared/types'
 import { api, errorText } from './api'
 import { Avatar } from './Board'
+import { DatePicker } from './DatePicker'
 import { Phone, Plate } from './icons'
 import { Logo } from './Logo'
-import { telHref } from './util'
+import { dayStr, telHref } from './util'
 
 // Date et heure, avec l'année seulement si ce n'est pas l'année en cours
 function quand(iso: string) {
@@ -62,12 +63,7 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
           Quel jour ?
         </label>
         <div className="finder-row">
-          <input id="h-jour" className="inp sm" type="date" value={jour} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setJour(e.target.value)} />
-          {jour && (
-            <button type="button" className="link" onClick={() => setJour('')}>
-              Tous les jours
-            </button>
-          )}
+          <DatePicker id="h-jour" value={jour} max={dayStr(0)} placeholder="Tous les jours" onChange={setJour} />
         </div>
         <label className="sub" htmlFor="h-q">
           Plaque, voiture ou client

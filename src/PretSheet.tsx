@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
 import { api, errorText } from './api'
 import { Cal, Cam, Check, Pen, Plate } from './icons'
+import { DatePicker } from './DatePicker'
 import { Sheet, SheetHead } from './Sheet'
 import { dayStr, fmtS, shrinkPhoto } from './util'
 
@@ -157,14 +158,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                     </button>
                   )
                 })}
-                <input
-                  className="inp sm"
-                  type="date"
-                  aria-label="Autre date de retour"
-                  min={dayStr(0)}
-                  value={d.retour}
-                  onChange={(e) => set({ retour: e.target.value })}
-                />
+                <DatePicker value={d.retour} min={dayStr(0)} placeholder="Autre date de retour" onChange={(v) => set({ retour: v })} />
               </div>
             )}
             {d.open === 'plus' && (
