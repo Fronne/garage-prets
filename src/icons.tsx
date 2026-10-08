@@ -6,12 +6,13 @@ const S = ({ sm, children }: P & { children: React.ReactNode }) => (
   </svg>
 )
 
+// Silhouette de Golf : basse et allongée, hayon incliné, long capot
 export const Car = (p: P) => (
   <S {...p}>
-    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" />
-    <circle cx="7" cy="17" r="2" />
-    <path d="M9 17h6" />
-    <circle cx="17" cy="17" r="2" />
+    <path d="M4.6 17H2.8c-.5 0-.8-.4-.8-.8v-2.5c0-.5.2-1 .5-1.3L5.2 9.6c.4-.4.9-.6 1.5-.6h5.8c.7 0 1.3.3 1.8.7l3.1 2.4 3.6.7c.9.2 1.5.9 1.5 1.8v1.6c0 .5-.4.8-.8.8h-2.1" />
+    <circle cx="6.6" cy="17" r="2" />
+    <path d="M8.6 17h6.9" />
+    <circle cx="17.5" cy="17" r="2" />
   </S>
 )
 export const Check = (p: P) => (
