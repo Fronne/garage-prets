@@ -268,4 +268,5 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
   @keyframes from-d { from { opacity: 0; transform: translateX(32px) } }
   @keyframes from-g { from { opacity: 0; transform: translateX(-32px) } }
 }
-html, body { overflow-x: hidden; overscroll-behavior-x: none }
+html { overscroll-behavior-x: none }
+.page { overflow-x: clip }
