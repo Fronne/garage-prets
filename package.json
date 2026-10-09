@@ -20,6 +20,7 @@
     "@capacitor/android": "^7.6.9",
     "@capacitor/core": "^7.6.9",
     "@fontsource-variable/plus-jakarta-sans": "^5.1.0",
+    "@fontsource/archivo": "^5.1.0",
     "hono": "^4.6.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
