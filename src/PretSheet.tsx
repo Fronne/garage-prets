@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
 import { Cal, Check, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
-import { Sheet, SheetHead } from './Sheet'
+import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { dayStr, fmtS } from './util'
 
 export type Draft = { client: string; retour: string; tel: string; note: string; photo: string | null; open: 'retour' | 'tel' | 'note' | null }
@@ -84,6 +84,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
           <form
             className="f"
             noValidate
+            onKeyDown={fermerClavier}
             onSubmit={(e) => {
               e.preventDefault()
               if (save()) close()
@@ -93,6 +94,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
               À qui tu la prêtes ?
             </label>
             <input
+              enterKeyHint="done"
               ref={clientRef}
               className="inp"
               id="client"
@@ -151,7 +153,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <label className="sub" htmlFor="tel">
                   Téléphone du client
                 </label>
-                <input className="inp sm" id="tel" type="tel" inputMode="tel" autoComplete="off" placeholder="06 12 34 56 78" value={d.tel} onChange={(e) => set({ tel: e.target.value })} />
+                <input enterKeyHint="done" className="inp sm" id="tel" type="tel" inputMode="tel" autoComplete="off" placeholder="06 12 34 56 78" value={d.tel} onChange={(e) => set({ tel: e.target.value })} />
               </>
             )}
             {d.open === 'note' && (
@@ -160,6 +162,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                   Note
                 </label>
                 <input
+                  enterKeyHint="done"
                   className="inp sm"
                   id="note"
                   placeholder="Exemple : sa voiture en atelier, rayure déjà là"

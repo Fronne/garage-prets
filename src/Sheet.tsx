@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type KeyboardEvent as KEvent, type TouchEvent } from 'react'
 import { Check, X } from './icons'
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -11,6 +11,14 @@ const RequestClose = createContext<() => void>(() => {})
 
 // Fenêtre qui monte du bas de l'écran. On la ferme par la croix, en touchant le fond ou en la faisant glisser vers le bas ;
 // s'il y a des modifications, elle descend puis demande s'il faut les enregistrer (« Continuer à modifier » la fait remonter). Elle rend le focus à la carte d'origine.
+// Touche Entrée du clavier dans une fiche : elle ferme seulement le clavier, on valide avec le gros bouton
+export function fermerClavier(e: KEvent<HTMLElement>) {
+  if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
+    e.preventDefault()
+    e.target.blur()
+  }
+}
+
 export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: Ask; children: (close: () => void) => ReactNode }) {
   const [closing, setClosing] = useState(false)
   const [asking, setAsking] = useState(false)

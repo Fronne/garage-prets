@@ -71,13 +71,15 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
         <input
           id="h-q"
           className="inp sm"
-          type="search"
+          enterKeyHint="done"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}
           placeholder="AB-123-CD, Clio, M. Martin…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          // La recherche se fait pendant la frappe : la touche du clavier le referme pour voir les résultats
+          onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />
       </div>
       <div className="err" role="alert">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Vehicule } from '../shared/types'
 import { Check } from './icons'
-import { Sheet, SheetHead } from './Sheet'
+import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { PlateInput } from './PlateInput'
 
 type Props = {
@@ -54,6 +54,7 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
           <form
             className="f"
             noValidate
+            onKeyDown={fermerClavier}
             onSubmit={(e) => {
               e.preventDefault()
               if (save()) close()
@@ -63,6 +64,7 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
               Comment vous l'appelez ?
             </label>
             <input
+              enterKeyHint="done"
               className="inp"
               id="nom"
               autoComplete="off"

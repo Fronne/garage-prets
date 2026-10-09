@@ -23,6 +23,14 @@ export function PlateInput({ value, onChange }: { value: string; onChange: (v: s
   }
 
   function back(i: number, e: KeyboardEvent<HTMLInputElement>) {
+    // Entrée : case suivante, ou fermer le clavier sur la dernière
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      e.stopPropagation()
+      if (i < 2) refs[i + 1].current?.focus()
+      else e.currentTarget.blur()
+      return
+    }
     if (e.key === 'Backspace' && !parts[i] && i > 0) {
       e.preventDefault()
       const prev = refs[i - 1].current!
@@ -49,6 +57,7 @@ export function PlateInput({ value, onChange }: { value: string; onChange: (v: s
     return (
       <>
         <input
+          enterKeyHint="done"
           className="inp sm"
           id="immat"
           autoComplete="off"
