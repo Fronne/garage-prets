@@ -9,7 +9,7 @@ if (!cle) console.warn("android/cle-appli.txt absent : l'appli demandera le code
 
 const config: CapacitorConfig = {
   appId: 'app.garageprets',
-  appName: 'Prêts',
+  appName: 'Canal Mhirsi Service',
   webDir: 'dist',
   server: {
     url: 'https://garage-prets.handy-apps.workers.dev',

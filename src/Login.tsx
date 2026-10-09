@@ -109,8 +109,8 @@ function CodeLogin({ onDone }: { onDone: () => void }) {
         <Car />
       </div>
       <div>
-        <h1>Voitures de prêt</h1>
-        <p>Pour savoir qui a quelle voiture. À faire une seule fois sur ce téléphone.</p>
+        <h1>Canal Mhirsi Service</h1>
+        <p>Voitures de prêt : pour savoir qui a quelle voiture. À faire une seule fois sur ce téléphone.</p>
       </div>
       <form
         className="f"

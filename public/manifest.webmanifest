@@ -1,6 +1,6 @@
 {
-  "name": "Voitures de prêt",
-  "short_name": "Prêts",
+  "name": "Canal Mhirsi Service",
+  "short_name": "CMS Prêts",
   "lang": "fr",
   "start_url": "/",
   "display": "standalone",

@@ -234,7 +234,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   if (!data) {
     return (
       <main className="wrap">
-        <h1>Voitures de prêt</h1>
+        <h1>Canal Mhirsi Service</h1>
         <p className="auto">{offline ? 'Pas de connexion internet.' : 'Chargement…'}</p>
       </main>
     )
