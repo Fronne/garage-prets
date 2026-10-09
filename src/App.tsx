@@ -9,6 +9,7 @@ import { buzz } from './util'
 import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
+import { EquipeSheet } from './EquipeSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { AppIcon, Clock } from './icons'
 import { Historique, chercherDansHistorique } from './Historique'
@@ -21,6 +22,7 @@ type SheetState =
   | { kind: 'voir'; pid: string }
   | { kind: 'vehicule'; vid?: string }
   | { kind: 'moi' }
+  | { kind: 'equipe' }
   | null
 
 type Page = 'prets' | 'parc' | 'histo'
@@ -363,7 +365,17 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       />
     )
   } else if (sheet?.kind === 'moi') {
-    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} onParc={page === 'parc' ? undefined : () => (pageApres.current = 'parc')} />
+    sheetEl = (
+      <MoiSheet
+        moi={data.moi}
+        onClose={close}
+        onChanger={onLogout}
+        onParc={page === 'parc' ? undefined : () => (pageApres.current = 'parc')}
+        onEquipe={() => setSheet({ kind: 'equipe' })}
+      />
+    )
+  } else if (sheet?.kind === 'equipe') {
+    sheetEl = <EquipeSheet moi={data.moi} onClose={close} />
   }
 
   // Contenu d'un onglet

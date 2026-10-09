@@ -53,6 +53,13 @@ export const User = () => (
     <path d="M4 21a8 8 0 0 1 16 0" />
   </S>
 )
+export const Users = () => (
+  <S>
+    <circle cx="9" cy="8" r="3.5" />
+    <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+    <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.3A6.5 6.5 0 0 1 21.5 20" />
+  </S>
+)
 export const Clock = () => (
   <S>
     <circle cx="12" cy="12" r="9" />

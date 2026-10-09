@@ -218,6 +218,10 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .styles { display: flex; flex-direction: column; gap: 8px }
 .styles > span { font-size: 0.875rem; font-weight: 600; color: var(--muted) }
 .styles .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+.equipe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column }
+.equipe li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--line) }
+.equipe li:last-child { border-bottom: 0 }
+.equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
 .cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */

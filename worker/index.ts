@@ -182,6 +182,23 @@ app.delete('/api/vehicules/:id', async (c) => {
   return c.json({ ok: true })
 })
 
+// ---------- Équipe ----------
+
+const memePrenom = (a: string, b: string) => a.toLowerCase() === b.toLowerCase()
+
+app.get('/api/equipe', async (c) => c.json({ equipe: await getEquipe(c.env) }))
+
+// Retire un prénom de « Qui es-tu ? » (créé par erreur, faute de frappe) ; ses prêts restent dans l'historique
+app.delete('/api/equipe/:prenom', async (c) => {
+  const prenom = c.req.param('prenom')
+  if (memePrenom(prenom, c.get('prenom'))) throw bad('Pour retirer ton propre prénom, fais-le depuis un autre téléphone.')
+  const next = (await getEquipe(c.env)).filter((n) => !memePrenom(n, prenom))
+  await c.env.DB.prepare("INSERT INTO meta (key, value) VALUES ('equipe', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+    .bind(JSON.stringify(next))
+    .run()
+  return c.json({ equipe: next })
+})
+
 // ---------- Prêts ----------
 
 function pretFields(b: any) {

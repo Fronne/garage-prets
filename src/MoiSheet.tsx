@@ -1,10 +1,10 @@
-import { List, User } from './icons'
+import { List, User, Users } from './icons'
 import { Sheet, SheetHead } from './Sheet'
 import { useState } from 'react'
 import { appliquerStyle, lireStyle, type Style } from './style'
 
 // Qui est connecté sur ce téléphone, l'accès au parc (rarement utile, donc pas dans la barre du bas) et le bouton pour laisser la place à quelqu'un d'autre
-export function MoiSheet({ moi, onClose, onChanger, onParc }: { moi: string; onClose: () => void; onChanger: () => void; onParc?: () => void }) {
+export function MoiSheet({ moi, onClose, onChanger, onParc, onEquipe }: { moi: string; onClose: () => void; onChanger: () => void; onParc?: () => void; onEquipe: () => void }) {
   const [style, setStyle] = useState(lireStyle)
   const choisir = (s: Style) => {
     appliquerStyle(s)
@@ -49,6 +49,10 @@ export function MoiSheet({ moi, onClose, onChanger, onParc }: { moi: string; onC
               Gérer le parc
             </button>
           )}
+          <button className="cta alt" onClick={onEquipe}>
+            <Users />
+            L'équipe
+          </button>
           <button className="cta alt" onClick={onChanger}>
             <User />
             Changer de personne
