@@ -10,7 +10,7 @@ import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { enAttente, envoyer, vider } from './envois'
-import { Car, Clock } from './icons'
+import { AppIcon, Clock } from './icons'
 import { Historique, chercherDansHistorique } from './Historique'
 
 const CACHE_KEY = 'garage.cache'
@@ -407,7 +407,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         {pastille && <span className={'tab-pill' + (pastille.anim ? ' anim' : '')} style={{ transform: `translate(${pastille.x}px, ${pastille.y}px)` }} />}
         {(
           [
-            ['prets', <Car key="i" />, 'Prêts'],
+            ['prets', <AppIcon key="i" className="i app" />, 'Prêts'],
             ['histo', <Clock key="i" />, 'Historique'],
           ] as const
         ).map(([id, icon, label]) => (

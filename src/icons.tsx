@@ -16,8 +16,9 @@ export const Car = (p: P) => (
   </S>
 )
 // Dessin de l'icône de l'application, en trait fin (le même que scripts/gen-icons.mjs)
-export const AppIcon = () => (
-  <svg viewBox="0 1.3 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="0.65" strokeLinecap="round" strokeLinejoin="round">
+// `className="i app"` pour la taille et l'épaisseur des autres icônes (onglet Prêts)
+export const AppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 1.3 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="0.65" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4.3 16H3.3C2.6 16 2.3 15.4 2.4 14.7L2.6 12.9C2.7 11.9 3.1 11 3.7 10.3L4.5 9.5C5 9 5.7 8.8 6.6 8.8L11.6 8.7C12.8 8.7 13.7 9 14.5 9.6L17.4 11.6C17.9 11.95 18.5 12.1 19.1 12.2L20.6 12.5C21.6 12.7 22.3 13.4 22.3 14.4V15.1C22.3 15.6 21.9 16 21.4 16H20.3A2.5 2.5 0 0 0 15.3 16H9.3A2.5 2.5 0 0 0 4.3 16" />
     <circle cx="6.8" cy="16" r="1.85" />
     <circle cx="17.8" cy="16" r="1.85" />
