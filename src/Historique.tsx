@@ -3,7 +3,7 @@ import type { LigneHisto } from '../shared/types'
 import { api, errorText } from './api'
 import { Avatar } from './Board'
 import { DatePicker } from './DatePicker'
-import { Phone, Plate } from './icons'
+import { Phone, Plate, X } from './icons'
 import { Logo } from './Logo'
 import { dayStr, telHref } from './util'
 
@@ -15,10 +15,15 @@ function quand(iso: string) {
 }
 const mois = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 
+// La recherche reste tant que l'appli est ouverte (aller voir une voiture puis revenir), et repart à zéro au prochain lancement
+const memo = { jour: '', q: '' }
+
 // Tous les prêts passés : on choisit un jour (celui du PV) et/ou on tape une plaque pour savoir qui avait la voiture
 export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
-  const [jour, setJour] = useState('')
-  const [q, setQ] = useState('')
+  const [jour, setJourRaw] = useState(memo.jour)
+  const [q, setQRaw] = useState(memo.q)
+  const setJour = (v: string) => setJourRaw((memo.jour = v))
+  const setQ = (v: string) => setQRaw((memo.q = v))
   const [rows, setRows] = useState<LigneHisto[] | null>(null)
   const [err, setErr] = useState('')
 
@@ -81,6 +86,12 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
           // La recherche se fait pendant la frappe : la touche du clavier le referme pour voir les résultats
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />
+        {(jour || q) && (
+          <button type="button" className="link efface" onClick={() => (setJour(''), setQ(''))}>
+            <X sm />
+            Effacer la recherche
+          </button>
+        )}
       </div>
       <div className="err" role="alert">
         {err}
