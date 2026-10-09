@@ -24,13 +24,8 @@
   --cta: #0f2a44; --eu: #003399; --focus: #a8520a;
   --fd: 'Archivo', 'Arial Black', system-ui, sans-serif;
 }
-/* Atelier : bandeau bleu nuit sous l'en-tête des pages, d'un bord à l'autre de l'écran */
-:root[data-style='atelier'] body { overflow-x: clip }
-:root[data-style='atelier'] header { position: relative; isolation: isolate; color: #ffffff; padding-bottom: 4px; margin-bottom: 8px }
-:root[data-style='atelier'] header::before { content: ''; position: absolute; z-index: -1; left: 50%; width: 100vw; margin-left: -50vw; top: calc(-16px - env(safe-area-inset-top, 0px)); bottom: -16px; background: var(--ink); border-radius: 0 0 24px 24px }
-:root[data-style='atelier'] header .eyebrow { color: #b8c4d2 }
-:root[data-style='atelier'] header .offline { color: #f59a3d }
-:root[data-style='atelier'] header .count, :root[data-style='atelier'] header .avatar { border-color: transparent; box-shadow: none }
+/* Atelier : appeler est une action, pas un état : bouton bleu nuit, téléphone blanc (le vert reste pour « disponible ») */
+:root[data-style='atelier'] .btn.call { background: var(--ink); color: #ffffff }
 * { box-sizing: border-box }
 html, body { margin: 0; min-height: 100% }
 body { background: var(--bg); color: var(--ink); font: 1rem/1.5 var(--f); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain }
