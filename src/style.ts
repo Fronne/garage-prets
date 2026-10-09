@@ -2,8 +2,8 @@
 export type Style = 'classique' | 'atelier'
 
 const KEY = 'garage.style'
-// Fond de la barre du téléphone pour chaque style (même valeur que --bg dans styles.css)
-const BARRE: Record<Style, string> = { classique: '#f7f8fa', atelier: '#f4f6f9' }
+// Fond de la barre du téléphone pour chaque style : le fond de page en classique, le bandeau bleu nuit en atelier
+const BARRE: Record<Style, string> = { classique: '#f7f8fa', atelier: '#0f2a44' }
 
 export function lireStyle(): Style {
   try {
