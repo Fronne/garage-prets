@@ -156,9 +156,10 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
             <button
               className="cta"
               onClick={() => {
-                // Enregistré : on ferme sans faire remonter la fenêtre ; sinon elle remonte pour montrer ce qui bloque
+                // Enregistré : on ferme sans faire remonter la fenêtre ; sinon elle remonte pour montrer ce qui bloque, sans rouvrir le clavier
+                calme.current = Date.now() + 500
                 if (ask.save()) close()
-                else setAsking(false)
+                else reprendre()
               }}
             >
               <Check />
