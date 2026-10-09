@@ -321,3 +321,11 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none }
 input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text }
 .finder .efface { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 4px }
+.cal-tb { border: 0; background: var(--bg); color: var(--ink); font-family: inherit; min-height: 44px; padding: 0 12px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px }
+.cal-tb:active { background: var(--bg) }
+.cal-tri { font-size: 0.75rem; color: var(--muted) }
+.cal-mois { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px 4px }
+.cal-m { min-height: 52px; border: 0; border-radius: 14px; background: var(--bg); color: var(--ink); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer }
+.cal-m::first-letter { text-transform: uppercase }
+.cal-m.sel { background: var(--ink); color: var(--surface) }
+.cal-m:disabled { color: #c4c8d0; cursor: default }

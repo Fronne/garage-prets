@@ -11,6 +11,8 @@ type Props = { value: string; onChange: (v: string) => void; min?: string; max?:
 // Calendrier aux couleurs de l'appli, à la place de celui du téléphone : on touche un jour et c'est choisi
 export function DatePicker({ value, onChange, min, max, placeholder, id }: Props) {
   const [open, setOpen] = useState(false)
+  // Toucher le titre du mois affiche les 12 mois avec l'année : on change d'année en deux touchers
+  const [choixMois, setChoixMois] = useState(false)
   const [mois, setMois] = useState(() => {
     const d = value ? new Date(value + 'T12:00') : new Date()
     return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -18,6 +20,7 @@ export function DatePicker({ value, onChange, min, max, placeholder, id }: Props
   const ouvrir = () => {
     const d = value ? new Date(value + 'T12:00') : new Date()
     setMois(new Date(d.getFullYear(), d.getMonth(), 1))
+    setChoixMois(false)
     setOpen(true)
   }
   const choisir = (v: string) => {
@@ -33,6 +36,11 @@ export function DatePicker({ value, onChange, min, max, placeholder, id }: Props
   const decaler = (n: number) => setMois(new Date(mois.getFullYear(), mois.getMonth() + n, 1))
   const prevOk = !min || iso(new Date(mois.getFullYear(), mois.getMonth(), 0)) >= min
   const nextOk = !max || iso(new Date(mois.getFullYear(), mois.getMonth() + 1, 1)) <= max
+  const an = mois.getFullYear()
+  // Un mois (ou une année) est choisissable s'il touche l'intervalle min..max
+  const moisOk = (y: number, m: number) => (!min || iso(new Date(y, m + 1, 0)) >= min) && (!max || iso(new Date(y, m, 1)) <= max)
+  const anOk = (y: number) => (!min || `${y}-12-31` >= min) && (!max || `${y}-01-01` <= max)
+  const NOMS = Array.from({ length: 12 }, (_, m) => new Date(2000, m, 1).toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''))
   // Les gestes dans le calendrier ne doivent pas faire glisser la fenêtre qui est dessous
   const stop = (e: SyntheticEvent) => e.stopPropagation()
 
@@ -56,14 +64,48 @@ export function DatePicker({ value, onChange, min, max, placeholder, id }: Props
           >
             <div className="cal" role="dialog" aria-modal="true" aria-label="Choisir un jour">
               <div className="cal-hd">
-                <button type="button" className="cal-nav" onClick={() => decaler(-1)} disabled={!prevOk} aria-label="Mois précédent">
-                  <Back />
-                </button>
-                <span className="cal-t">{mois.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
-                <button type="button" className="cal-nav" onClick={() => decaler(1)} disabled={!nextOk} aria-label="Mois suivant">
-                  <Chevron />
-                </button>
+                {choixMois ? (
+                  <>
+                    <button type="button" className="cal-nav" onClick={() => setMois(new Date(an - 1, mois.getMonth(), 1))} disabled={!anOk(an - 1)} aria-label="Année précédente">
+                      <Back />
+                    </button>
+                    <button type="button" className="cal-t cal-tb" onClick={() => setChoixMois(false)} aria-label="Revenir aux jours">
+                      {an}
+                    </button>
+                    <button type="button" className="cal-nav" onClick={() => setMois(new Date(an + 1, mois.getMonth(), 1))} disabled={!anOk(an + 1)} aria-label="Année suivante">
+                      <Chevron />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button type="button" className="cal-nav" onClick={() => decaler(-1)} disabled={!prevOk} aria-label="Mois précédent">
+                      <Back />
+                    </button>
+                    <button type="button" className="cal-t cal-tb" onClick={() => setChoixMois(true)} aria-label="Choisir le mois et l'année">
+                      {mois.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^./, (c) => c.toUpperCase())}
+                      <span className="cal-tri" aria-hidden="true">▾</span>
+                    </button>
+                    <button type="button" className="cal-nav" onClick={() => decaler(1)} disabled={!nextOk} aria-label="Mois suivant">
+                      <Chevron />
+                    </button>
+                  </>
+                )}
               </div>
+              {choixMois ? (
+                <div className="cal-mois">
+                  {NOMS.map((n, m) => (
+                    <button
+                      type="button"
+                      key={n}
+                      className={'cal-m' + (m === mois.getMonth() ? ' sel' : '')}
+                      disabled={!moisOk(an, m)}
+                      onClick={() => (setMois(new Date(an, m, 1)), setChoixMois(false))}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              ) : (
               <div className="cal-grid">
                 {JOURS.map((j, i) => (
                   <span key={'j' + i} className="cal-dow" aria-hidden="true">
@@ -89,6 +131,7 @@ export function DatePicker({ value, onChange, min, max, placeholder, id }: Props
                   )
                 })}
               </div>
+              )}
               <div className="cal-ft">
                 {(!min || auj >= min) && (!max || auj <= max) && (
                   <button type="button" className="cal-btn" onClick={() => choisir(auj)}>
