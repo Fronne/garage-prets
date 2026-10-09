@@ -1,38 +1,21 @@
-/* Design « Qui a quoi ? » validé par Cyril : grille de cartes sur 2 colonnes, mode clair seulement, couleurs douces.
-   Profil UI UX Pro Max « Inventory & Stock Management » : statuts feu tricolore, transitions 200 ms, icônes au trait. */
+/* Charte Canal Mhirsi Service : bleu nuit, orange atelier (seulement pour l'état « prêtée »), gris acier, titres en Archivo.
+   Grille de cartes sur 2 colonnes, mode clair seulement, statuts feu tricolore, transitions 200 ms, icônes au trait. */
 :root {
   color-scheme: light;
-  --bg: #f7f8fa; --surface: #ffffff; --ink: #111827; --slate: #374151; --muted: #6b7280; --line: #eceef2; --scrim: rgba(17, 24, 39, 0.45);
-  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 4px 14px rgba(17, 24, 39, 0.05);
-  --shadow-up: 0 2px 6px rgba(17, 24, 39, 0.06), 0 12px 28px rgba(17, 24, 39, 0.08);
-  --ok: #047857; --ok-mid: #10b981; --ok-bg: #ecfdf5; --on-ok: #ffffff;
-  --out: #b45309; --out-mid: #f59e0b; --out-bg: #fffbeb;
-  --late: #be123c; --late-mid: #f43f5e; --late-soft: #fff1f2;
-  --cta: #111827; --on-cta: #ffffff; --done: #047857;
-  --eu: #2563eb; --on-eu: #ffffff; --focus: #2563eb;
-  --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --fd: var(--f); /* titres */
-  --plate-line: #d1d5db; --plate-ink: #0f172a; --dash: #d1d5db; --faint: #c4c8d0; --late-line: #fecdd3;
-  --scrim-soft: rgba(17, 24, 39, 0.35); --shadow-sheet: rgba(15, 23, 42, 0.18); --shadow-pop: rgba(15, 23, 42, 0.25); --focus-soft: rgba(17, 24, 39, 0.08);
-  --t: 200ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-/* Style « Atelier » : charte Canal Mhirsi Service (bleu nuit, orange atelier, gris acier, titres en Archivo).
-   Choisi dans « Sur ce téléphone » (src/style.ts). L'orange ne sert qu'à l'état « prêtée », comme le veut la charte. */
-:root[data-style='atelier'] {
   --bg: #f4f6f9; --surface: #ffffff; --ink: #0f2a44; --slate: #33475c; --muted: #5b6b7d; --line: #dde3ea; --scrim: rgba(15, 42, 68, 0.45);
   --shadow: 0 1px 2px rgba(15, 42, 68, 0.05), 0 4px 14px rgba(15, 42, 68, 0.06);
   --shadow-up: 0 2px 6px rgba(15, 42, 68, 0.07), 0 12px 28px rgba(15, 42, 68, 0.1);
+  --ok: #047857; --ok-mid: #10b981; --ok-bg: #e6f6ef; --on-ok: #ffffff;
   --out: #a8520a; --out-mid: #f28c28; --out-bg: #fdebd8;
-  --cta: #0f2a44; --eu: #003399; --focus: #a8520a;
-  --ok-bg: #e6f6ef; --late-soft: #fdecef;
+  --late: #be123c; --late-mid: #f43f5e; --late-soft: #fdecef;
+  --cta: #0f2a44; --on-cta: #ffffff; --done: #047857;
+  --eu: #003399; --on-eu: #ffffff; --focus: #a8520a;
+  --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fd: 'Archivo', 'Arial Black', system-ui, sans-serif; /* titres */
   --plate-line: #dde3ea; --plate-ink: #0f2a44; --dash: #c5cfda; --faint: #b5c0cc; --late-line: #f9c9d3;
   --scrim-soft: rgba(15, 42, 68, 0.35); --shadow-sheet: rgba(15, 42, 68, 0.18); --shadow-pop: rgba(15, 42, 68, 0.25); --focus-soft: rgba(15, 42, 68, 0.1);
-  --fd: 'Archivo', 'Arial Black', system-ui, sans-serif;
+  --t: 200ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* Atelier : appeler est une action, pas un état : bouton bleu nuit, téléphone blanc (le vert reste pour « disponible ») */
-:root[data-style='atelier'] .btn.call { background: var(--ink); color: #ffffff }
-/* Atelier : une case déjà remplie (retour, téléphone, note) est bleu nuit, pas verte : le vert ne veut dire que « disponible » */
-:root[data-style='atelier'] .opt.done { background: #eaf0f6; border-color: var(--ink); color: var(--ink) }
 * { box-sizing: border-box }
 html, body { margin: 0; min-height: 100% }
 body { background: var(--bg); color: var(--ink); font: 1rem/1.5 var(--f); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain }
@@ -125,7 +108,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .auto { font-size: 0.875rem; color: var(--muted) }
 .opts { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px dashed var(--line); padding-top: 16px }
 .opt { flex: 1 1 0; white-space: nowrap; min-width: 0; min-height: 50px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 0.875rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px }
-.opt.done { background: var(--ok-bg); border-color: var(--ok-mid); color: var(--ok) }
+/* Case déjà remplie (retour, téléphone, note) : bleu nuit, pas vert */
+.opt.done { background: #eaf0f6; border-color: var(--ink); color: var(--ink) }
 .opt[aria-expanded='true'] { border-color: var(--ink) }
 .cta { min-height: 64px; border: 0; border-radius: 16px; background: var(--cta); color: var(--on-cta); font-size: 1.25rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0 16px }
 .cta.ok { background: var(--done); color: var(--on-ok) }
@@ -153,7 +137,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .who-n { font-size: 1.25rem; font-weight: 700; overflow-wrap: anywhere }
 .tel { font-size: 0.875rem; font-weight: 600; user-select: all }
 .btn { border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none }
-.btn.call { background: var(--ok-bg); color: var(--ok); width: 52px; height: 52px; border-radius: 50%; flex: none }
+/* Appeler est une action, pas un état : bleu nuit, pas vert (le vert ne veut dire que « disponible ») */
+.btn.call { background: var(--ink); color: #ffffff; width: 52px; height: 52px; border-radius: 50%; flex: none }
 .kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 0.875rem }
 .kv div { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
 .kv span:first-child { color: var(--muted) } .kv span:last-child { font-weight: 700; overflow-wrap: anywhere }
@@ -215,9 +200,6 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .moi { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 4px; text-align: center }
 .moi-av { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-size: 1.875rem; font-weight: 800 }
 .moi-n { font-size: 1.375rem; font-weight: 800; margin-top: 4px }
-.styles { display: flex; flex-direction: column; gap: 8px }
-.styles > span { font-size: 0.875rem; font-weight: 600; color: var(--muted) }
-.styles .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
 .equipe { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column }
 .equipe li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--line) }
 .equipe li:last-child { border-bottom: 0 }

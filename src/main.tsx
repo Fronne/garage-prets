@@ -5,10 +5,6 @@ import '@fontsource/archivo/latin-700.css'
 import '@fontsource/archivo/latin-800.css'
 import App from './App'
 import './styles.css'
-import { appliquerStyle, lireStyle } from './style'
-
-// Avant le premier affichage, pour ne pas voir l'autre style une fraction de seconde
-appliquerStyle(lireStyle())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
