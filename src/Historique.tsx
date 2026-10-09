@@ -18,6 +18,12 @@ const mois = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { month:
 // La recherche reste tant que l'appli est ouverte (aller voir une voiture puis revenir), et repart à zéro au prochain lancement
 const memo = { jour: '', q: '' }
 
+// Depuis la fiche d'une voiture : l'Historique s'ouvre déjà filtré sur elle, tous les jours
+export function chercherDansHistorique(q: string) {
+  memo.jour = ''
+  memo.q = q
+}
+
 // Tous les prêts passés : on choisit un jour (celui du PV) et/ou on tape une plaque pour savoir qui avait la voiture
 export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
   const [jour, setJourRaw] = useState(memo.jour)

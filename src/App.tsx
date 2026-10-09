@@ -11,7 +11,7 @@ import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { Car, Clock } from './icons'
-import { Historique } from './Historique'
+import { Historique, chercherDansHistorique } from './Historique'
 
 const CACHE_KEY = 'garage.cache'
 const POLL_MS = 15_000
@@ -86,10 +86,11 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         return window.dispatchEvent(new Event('sheet-back'))
       }
       setPage(history.state?.page ?? 'prets')
-      // « Gérer le parc » touché dans le menu : on y va une fois la fenêtre refermée
-      if (parcApres.current) {
-        parcApres.current = false
-        allerRef.current('parc')
+      // « Gérer le parc » ou « Tout l'historique » touché dans une fenêtre : on y va une fois la fenêtre refermée
+      if (pageApres.current) {
+        const p = pageApres.current
+        pageApres.current = null
+        allerRef.current(p)
       }
     }
     window.addEventListener('popstate', onPop)
@@ -97,7 +98,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   }, [])
   // Une fenêtre ouverte ajoute une étape à l'historique du téléphone : le geste retour la ferme au lieu de quitter l'appli
   const sheetOpen = useRef(false)
-  const parcApres = useRef(false)
+  const pageApres = useRef<Page | null>(null)
   sheetOpen.current = sheet !== null
   useEffect(() => {
     if (sheet === null) return
@@ -343,6 +344,10 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           onClose={close}
           onRendue={() => rendue(p, v)}
           onModifier={() => setSheet({ kind: 'preter', vid: v.id, pid: p.id })}
+          onHistorique={() => {
+            chercherDansHistorique(v.immat || v.nom)
+            pageApres.current = 'histo'
+          }}
         />
       )
     }
@@ -358,7 +363,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       />
     )
   } else if (sheet?.kind === 'moi') {
-    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} onParc={page === 'parc' ? undefined : () => (parcApres.current = true)} />
+    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} onParc={page === 'parc' ? undefined : () => (pageApres.current = 'parc')} />
   }
 
   // Contenu d'un onglet

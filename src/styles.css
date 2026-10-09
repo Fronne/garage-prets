@@ -327,3 +327,10 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 .cal-m::first-letter { text-transform: uppercase }
 .cal-m.sel { background: var(--ink); color: var(--surface) }
 .cal-m:disabled { color: #c4c8d0; cursor: default }
+.tout-histo { margin-top: -4px; min-height: 40px; font-size: 0.875rem }
+/* Fiche d'une voiture dehors : tout doit tenir sur l'écran, sans défiler */
+.kv.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px }
+.hist div { padding: 6px 0 }
+/* Petits écrans : moins de lignes de prêts précédents, le lien mène à la suite */
+@media (max-height: 740px) { .hist div:nth-child(n + 4) { display: none } }
+@media (max-height: 680px) { .hist div:nth-child(n + 2) { display: none } }

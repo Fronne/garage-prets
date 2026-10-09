@@ -5,10 +5,10 @@ import { Check, Phone, Plate, Warn } from './icons'
 import { Sheet, SheetHead } from './Sheet'
 import { days, depuis, fmt, fmtS, isLate, telHref } from './util'
 
-type Props = { v: Vehicule; p: Pret; hist: Pret[]; onClose: () => void; onRendue: () => void; onModifier: () => void }
+type Props = { v: Vehicule; p: Pret; hist: Pret[]; onClose: () => void; onRendue: () => void; onModifier: () => void; onHistorique: () => void }
 
 // Fiche d'une voiture dehors : chez qui, depuis quand, et le bouton « Voiture rendue »
-export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier }: Props) {
+export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistorique }: Props) {
   const late = isLate(p)
   const [photo, setPhoto] = useState<string | null>(null)
 
@@ -50,7 +50,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier }: Props) 
               </a>
             )}
           </div>
-          <div className="kv">
+          <div className={'kv' + (p.par ? ' trois' : '')}>
             <div>
               <span>Partie le</span>
               <span>{fmt(p.depart)}</span>
@@ -77,7 +77,8 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier }: Props) 
             <>
               <div className="sub">Prêts précédents</div>
               <div className="hist">
-                {hist.slice(0, 5).map((x) => (
+                {/* 4 lignes au plus, pour que toute la fiche tienne sur l'écran avec le lien en dessous */}
+                {hist.slice(0, 4).map((x) => (
                   <div key={x.id}>
                     <b>{x.client}</b>
                     <span>
@@ -86,6 +87,16 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier }: Props) 
                   </div>
                 ))}
               </div>
+              <button
+                type="button"
+                className="link tout-histo"
+                onClick={() => {
+                  onHistorique()
+                  close()
+                }}
+              >
+                Voir tout l'historique de cette voiture
+              </button>
             </>
           )}
           <button
