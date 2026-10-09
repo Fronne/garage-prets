@@ -37,6 +37,20 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
     setAsking(true)
   }
   const request = () => (ask?.dirty ? askNow() : close())
+  // « Continuer à modifier » : la fenêtre remonte sans rouvrir le clavier. Sur Android, le téléphone peut
+  // redonner le focus au dernier champ (ou le toucher traverse) : on l'ignore pendant que la fenêtre remonte.
+  const calme = useRef(0)
+  const reprendre = () => {
+    calme.current = Date.now() + 500
+    setAsking(false)
+    sheetRef.current?.focus({ preventScroll: true })
+  }
+  const onFocusCapture = (e: { target: EventTarget }) => {
+    if (Date.now() < calme.current && (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+      e.target.blur()
+      sheetRef.current?.focus({ preventScroll: true })
+    }
+  }
 
   // Glisser vers le bas depuis le haut de la fenêtre la ferme
   const drag = useRef<{ y0: number; dy: number; t0: number } | null>(null)
@@ -74,7 +88,7 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
 
   // Échap ferme la fenêtre ; la référence suit la dernière version sans réabonner l'écouteur
   const closeRef = useRef(request)
-  closeRef.current = asking ? () => setAsking(false) : request
+  closeRef.current = asking ? reprendre : request
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current()
     // Geste retour du téléphone (voir App) : comme Échap
@@ -130,12 +144,13 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onTouchCancel={onTouchEnd}
+        onFocusCapture={onFocusCapture}
       >
         <div className="grab" aria-hidden="true" />
         <RequestClose.Provider value={request}>{children(close)}</RequestClose.Provider>
       </div>
       {asking && ask && (
-        <div className="ask-scrim" onClick={(e) => e.target === e.currentTarget && setAsking(false)}>
+        <div className="ask-scrim" onClick={(e) => e.target === e.currentTarget && reprendre()}>
           <div className="ask" role="alertdialog" aria-modal="true" aria-labelledby="ask-t">
             <h3 id="ask-t">Enregistrer les modifications ?</h3>
             <button
@@ -158,7 +173,7 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
             >
               Ne pas enregistrer
             </button>
-            <button className="link" onClick={() => setAsking(false)}>
+            <button className="link" onClick={reprendre}>
               Continuer à modifier
             </button>
           </div>
