@@ -148,8 +148,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 
 /* Connexion */
 .login { max-width: 26rem; margin: 0 auto; padding: calc(48px + env(safe-area-inset-top, 0px)) 16px 32px; display: flex; flex-direction: column; gap: 24px }
-.login .logo { width: 64px; height: 64px; border-radius: 18px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center }
-.login .logo svg { width: 36px; height: 36px; stroke-width: 1.6 }
+.login .logo { width: 64px; height: 64px; border-radius: 14px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center }
+.login .logo svg { width: 47px; height: 47px } /* mêmes proportions que l'icône de l'appli */
 .login p { margin: 0; color: var(--muted) }
 .chip.big { min-height: 56px; padding: 0 24px; font-size: 1.125rem; font-weight: 700 }
 

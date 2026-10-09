@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, ApiError, errorText, setToken } from './api'
-import { Car } from './icons'
+import { AppIcon } from './icons'
 
 const NAME_KEY = 'garage.prenom'
 
@@ -50,7 +50,7 @@ function AppLogin({ cle, onDone, onFail }: { cle: string; onDone: () => void; on
   return (
     <main className="login">
       <div className="logo" aria-hidden="true">
-        <Car />
+        <AppIcon />
       </div>
       <div>
         <h1>Qui es-tu ?</h1>
@@ -106,7 +106,7 @@ function CodeLogin({ onDone }: { onDone: () => void }) {
   return (
     <main className="login">
       <div className="logo" aria-hidden="true">
-        <Car />
+        <AppIcon />
       </div>
       <div>
         <h1>Canal Mhirsi Service</h1>
