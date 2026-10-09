@@ -42,7 +42,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
             <Plate immat={v.immat} />
             <button className="pill" onClick={onModifier}>
               <Pen />
-              Modifier
+              Modifier le prêt
             </button>
           </div>
           <div className="who-card">

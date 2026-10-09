@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
-import { Cal, Check, Pen, Phone, Plate } from './icons'
+import { AppIcon, Cal, Check, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
 import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { dayStr, fmtS } from './util'
@@ -85,8 +85,8 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
             <Plate immat={v.immat} />
             {!pret && (
               <button type="button" className="pill" onClick={onEditVehicule}>
-                <Pen />
-                Gérer
+                <AppIcon className="i app" />
+                Gérer la voiture
               </button>
             )}
           </div>
