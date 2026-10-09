@@ -11,12 +11,8 @@ type Props = {
   onRetirer?: () => void
 }
 
-// Indice de la première case pas remplie d'une plaque AB-123-CD commencée, -1 si elle est vide, complète ou en saisie libre
-function plaqueIncomplete(immat: string) {
-  const m = immat.match(/^([A-Z]{0,2})-?(\d{0,3})-?([A-Z]{0,2})$/)
-  if (!immat || !m) return -1
-  return [m[1].length < 2, m[2].length < 3, m[3].length < 2].indexOf(true)
-}
+// Plaque AB-123-CD commencée mais pas finie (vide ou ancienne plaque : c'est bon)
+const plaqueIncomplete = (immat: string) => /^[A-Z]{1,2}(-\d{0,3}(-[A-Z]{0,2})?)?$/.test(immat) && !/^[A-Z]{2}-\d{3}-[A-Z]{2}$/.test(immat)
 
 // Ajouter ou modifier une voiture : un nom suffit, la plaque est facultative
 export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
@@ -33,12 +29,8 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
       return false
     }
     // Plaque commencée mais pas finie : on bloque (vide, c'est permis)
-    const incomplete = plaqueIncomplete(immat)
-    if (incomplete >= 0) {
+    if (plaqueIncomplete(immat)) {
       setErrPlaque('Plaque incomplète : finis-la (AB-123-CD) ou vide-la.')
-      const box = document.querySelectorAll<HTMLInputElement>('.plate-box')[incomplete]
-      box?.focus()
-      box?.setSelectionRange(box.value.length, box.value.length)
       return false
     }
     onSave(nom.trim(), immat.trim())

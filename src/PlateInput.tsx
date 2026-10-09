@@ -1,120 +1,34 @@
-import { useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react'
-import { formatPlate } from './util'
+// Plaque en un seul champ dessiné comme une plaque : on tape « ab123cd » d'un trait, il s'écrit AB-123-CD.
+// Une ancienne plaque (elle commence par des chiffres, ex. 123 ABC 75) se tape telle quelle dans le même champ.
+export function formatPlaque(raw: string) {
+  let c = raw.toUpperCase().replace(/[^A-Z0-9]/g, '')
+  // Une lettre de trop à la fin d'une plaque complète est ignorée
+  if (/^[A-Z]{2}\d{3}[A-Z]{3,}$/.test(c)) c = c.slice(0, 7)
+  const m = c.match(/^([A-Z]{1,2})(\d{0,3})([A-Z]{0,2})$/)
+  // Pas le format AB-123-CD (ou pas encore) : saisie libre, en majuscules
+  if (!m || (m[2] === '' && m[3] !== '') || (m[1].length < 2 && m[2] !== '')) return raw.toUpperCase().replace(/[^A-Z0-9 -]/g, '').slice(0, 12)
+  return [m[1], m[2], m[3]].filter(Boolean).join('-')
+}
 
-const SIV = /^([A-Z]{0,2})-?(\d{0,3})-?([A-Z]{0,2})$/
-
-// Plaque en trois cases (AB - 123 - CD) : le clavier passe en chiffres pour la case du milieu,
-// et la case suivante prend la main dès que la précédente est pleine. « Ancienne plaque » : saisie libre.
 export function PlateInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const m = value.match(SIV)
-  const [libre, setLibre] = useState(!m)
-  const parts = m ? [m[1], m[2], m[3]] : ['', '', '']
-  const refs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)]
-
-  const emit = (p: string[]) => onChange(p.join('-').replace(/-+$/, ''))
-
-  function edit(i: number, raw: string) {
-    const clean = (i === 1 ? raw.replace(/\D/g, '') : raw.toUpperCase().replace(/[^A-Z]/g, '')).slice(0, i === 1 ? 3 : 2)
-    const next = [...parts]
-    next[i] = clean
-    emit(next)
-    // Case pleine : on passe à la suivante (le clavier change avec elle)
-    if (clean.length === (i === 1 ? 3 : 2) && i < 2) refs[i + 1].current?.focus()
-  }
-
-  function back(i: number, e: KeyboardEvent<HTMLInputElement>) {
-    // Entrée : case suivante, ou fermer le clavier sur la dernière
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      e.stopPropagation()
-      if (i < 2) refs[i + 1].current?.focus()
-      else e.currentTarget.blur()
-      return
-    }
-    if (e.key === 'Backspace' && !parts[i] && i > 0) {
-      e.preventDefault()
-      const prev = refs[i - 1].current!
-      prev.focus()
-      const next = [...parts]
-      next[i - 1] = next[i - 1].slice(0, -1)
-      emit(next)
-    }
-  }
-
-  // Toucher une case la sélectionne en entier : la lettre tapée remplace la case au lieu d'être ignorée
-  const selectAll = (e: { currentTarget: HTMLInputElement }) => e.currentTarget.select()
-
-  // Coller une plaque entière la répartit dans les trois cases
-  function paste(e: ClipboardEvent<HTMLInputElement>) {
-    const f = formatPlate(e.clipboardData.getData('text')).match(SIV)
-    if (!f) return
-    e.preventDefault()
-    emit([f[1], f[2], f[3]])
-    refs[2].current?.focus()
-  }
-
-  if (libre) {
-    return (
-      <>
-        <input
-          enterKeyHint="done"
-          className="inp sm"
-          id="immat"
-          autoComplete="off"
-          autoCapitalize="characters"
-          placeholder="123 ABC 75"
-          maxLength={12}
-          value={value}
-          onChange={(e) => onChange(e.target.value.toUpperCase())}
-        />
-        <button type="button" className="link" onClick={() => (setLibre(false), onChange(''))}>
-          Plaque au format AB-123-CD
-        </button>
-      </>
-    )
-  }
-
-  const box = (i: number, ph: string) => (
-    <input
-      ref={refs[i]}
-      id={i === 0 ? 'immat' : undefined}
-      className={'inp sm plate-box' + (i === 1 ? ' num' : '')}
-      aria-label={['Deux premières lettres', 'Trois chiffres', 'Deux dernières lettres'][i]}
-      autoComplete="off"
-      autoCorrect="off"
-      spellCheck={false}
-      autoCapitalize="characters"
-      inputMode={i === 1 ? 'numeric' : 'text'}
-      enterKeyHint={i === 2 ? 'done' : 'next'}
-      placeholder={ph}
-      value={parts[i]}
-      onChange={(e) => edit(i, e.target.value)}
-      onKeyDown={(e) => back(i, e)}
-      onFocus={selectAll}
-      onClick={selectAll}
-      onPaste={paste}
-    />
-  )
-
   return (
-    <>
-      <div className="plate-in">
-        <span className="eu" aria-hidden="true">
-          F
-        </span>
-        {box(0, 'AB')}
-        <span className="dash" aria-hidden="true">
-          –
-        </span>
-        {box(1, '123')}
-        <span className="dash" aria-hidden="true">
-          –
-        </span>
-        {box(2, 'CD')}
-      </div>
-      <button type="button" className="link" onClick={() => (setLibre(true), onChange(''))}>
-        Ancienne plaque (autre format)
-      </button>
-    </>
+    <div className="plate-in">
+      <span className="eu" aria-hidden="true">
+        F
+      </span>
+      <input
+        id="immat"
+        className="inp sm plate-box"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        autoCapitalize="characters"
+        enterKeyHint="done"
+        placeholder="AB-123-CD"
+        maxLength={12}
+        value={value}
+        onChange={(e) => onChange(formatPlaque(e.target.value))}
+      />
+    </div>
   )
 }
