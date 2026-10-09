@@ -101,6 +101,12 @@ export function Sheet({ onClose, ask, children }: { onClose: () => void; ask?: A
     }
   }, [])
 
+  // Fenêtre ouverte : la page derrière ne défile plus
+  useEffect(() => {
+    document.documentElement.classList.add('fige')
+    return () => document.documentElement.classList.remove('fige')
+  }, [])
+
   // Le focus va sur la fenêtre elle-même, pas sur un champ : le clavier ne s'ouvre que si on touche un champ
   useEffect(() => {
     const el = sheetRef.current
