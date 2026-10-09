@@ -13,6 +13,10 @@ Une application toute simple pour le garage : savoir quelle voiture de prêt est
 
 Dans l'appli Android, chacun touche son prénom au premier lancement : rien à taper. Dans un navigateur, on se connecte une fois avec le **code du garage** et un prénom (affiché dans « Prêtée par »).
 
+## Charte graphique
+
+Couleurs, polices, logo et règles d'usage : [`docs/charte/`](docs/charte/README.md). L'appli suit cette charte (bleu nuit, orange atelier pour les voitures prêtées, gris acier, titres en Archivo).
+
 ## Technique
 
 | Partie | Dossier | Outils |
