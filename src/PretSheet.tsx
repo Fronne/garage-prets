@@ -32,11 +32,10 @@ type Props = {
   onClose: () => void
   onSubmit: (d: Draft) => void
   onEditVehicule: () => void
-  onIndispo: () => void
 }
 
 // Prêter une voiture : seul le nom du client est obligatoire, le reste se déplie si besoin
-export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVehicule, onIndispo }: Props) {
+export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVehicule }: Props) {
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
   const clientRef = useRef<HTMLInputElement>(null)
@@ -177,14 +176,9 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
               {pret ? 'Enregistrer' : 'Prêter la ' + v.nom}
             </button>
             {!pret && (
-              <div className="liens">
-                <button type="button" className="link" onClick={onIndispo}>
-                  Mettre de côté (CT, réparation…)
-                </button>
-                <button type="button" className="link" onClick={onEditVehicule}>
-                  Modifier ou retirer cette voiture
-                </button>
-              </div>
+              <button type="button" className="link" onClick={onEditVehicule}>
+                Gérer cette voiture
+              </button>
             )}
           </form>
         </>

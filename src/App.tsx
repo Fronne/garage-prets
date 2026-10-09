@@ -10,7 +10,7 @@ import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { EquipeSheet } from './EquipeSheet'
-import { IndispoSheet } from './IndispoSheet'
+import { IndispoSheet, estIndispo } from './IndispoSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { AppIcon, Clock } from './icons'
 import { Historique, chercherDansHistorique, prechargerHistorique } from './Historique'
@@ -342,7 +342,6 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           onClose={close}
           onSubmit={(d) => (p ? modifier(p, d) : preter(v, d))}
           onEditVehicule={() => setSheet({ kind: 'vehicule', vid: v.id })}
-          onIndispo={() => setSheet({ kind: 'indispo', vid: v.id })}
         />
       )
     }
@@ -376,6 +375,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         onClose={close}
         onSave={(nom, immat) => saveVehicule(v, nom, immat)}
         onRetirer={v && !data.prets.some((p) => p.vehicule_id === v.id && !p.retour) ? () => retirer(v) : undefined}
+        onIndispo={v && !estIndispo(v) && !data.prets.some((p) => p.vehicule_id === v.id && !p.retour) ? () => setSheet({ kind: 'indispo', vid: v.id }) : undefined}
       />
     )
   } else if (sheet?.kind === 'moi') {

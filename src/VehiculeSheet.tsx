@@ -9,13 +9,14 @@ type Props = {
   onClose: () => void
   onSave: (nom: string, immat: string) => void
   onRetirer?: () => void
+  onIndispo?: () => void
 }
 
 // Plaque AB-123-CD commencée mais pas finie (vide ou ancienne plaque : c'est bon)
 const plaqueIncomplete = (immat: string) => /^[A-Z]{1,2}(-\d{0,3}(-[A-Z]{0,2})?)?$/.test(immat) && !/^[A-Z]{2}-\d{3}-[A-Z]{2}$/.test(immat)
 
 // Ajouter ou modifier une voiture : un nom suffit, la plaque est facultative
-export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
+export function VehiculeSheet({ v, onClose, onSave, onRetirer, onIndispo }: Props) {
   const [nom, setNom] = useState(v?.nom ?? '')
   const [immat, setImmat] = useState(v?.immat ?? '')
   const [err, setErr] = useState('')
@@ -42,7 +43,7 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
     <Sheet onClose={onClose} ask={{ dirty, save, saveLabel: v ? 'Enregistrer' : 'Ajouter la voiture' }}>
       {(close) => (
         <>
-          <SheetHead title={v ? 'Modifier la voiture' : 'Ajouter une voiture'} />
+          <SheetHead title={v ? 'Gérer la voiture' : 'Ajouter une voiture'} />
           <form
             className="f"
             noValidate
@@ -81,6 +82,11 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer }: Props) {
               {v ? 'Enregistrer' : 'Ajouter la voiture'}
             </button>
             {v && !onRetirer && <p className="auto">Elle est prêtée en ce moment : tu pourras la retirer une fois rendue.</p>}
+            {onIndispo && (
+              <button type="button" className="link" onClick={onIndispo}>
+                Mettre de côté (CT, réparation…)
+              </button>
+            )}
             {onRetirer && (
               <button
                 type="button"
