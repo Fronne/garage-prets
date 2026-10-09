@@ -6,17 +6,8 @@ const S = ({ sm, children }: P & { children: React.ReactNode }) => (
   </svg>
 )
 
-// Silhouette de Golf : basse et allongée, hayon incliné, long capot
-export const Car = (p: P) => (
-  <S {...p}>
-    <path d="M4.6 17H2.8c-.5 0-.8-.4-.8-.8v-2.5c0-.5.2-1 .5-1.3L5.2 9.6c.4-.4.9-.6 1.5-.6h5.8c.7 0 1.3.3 1.8.7l3.1 2.4 3.6.7c.9.2 1.5.9 1.5 1.8v1.6c0 .5-.4.8-.8.8h-2.1" />
-    <circle cx="6.6" cy="17" r="2" />
-    <path d="M8.6 17h6.9" />
-    <circle cx="17.5" cy="17" r="2" />
-  </S>
-)
 // Dessin de l'icône de l'application, en trait fin (le même que scripts/gen-icons.mjs)
-// `className="i app"` pour la taille et l'épaisseur des autres icônes (onglet Prêts)
+// `className="i app"` pour la taille et l'épaisseur des autres icônes (onglet Prêts, voiture de marque inconnue)
 export const AppIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 1.3 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="0.65" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4.95 16H3.3C2.6 16 2.3 15.4 2.4 14.7L2.6 12.9C2.7 11.9 3.1 11 3.7 10.3L4.5 9.5C5 9 5.7 8.8 6.6 8.8L11.6 8.7C12.8 8.7 13.7 9 14.5 9.6L17.4 11.6C17.9 11.95 18.5 12.1 19.1 12.2L20.6 12.5C21.6 12.7 22.3 13.4 22.3 14.4V15.1C22.3 15.6 21.9 16 21.4 16H19.65M8.65 16H15.95" />

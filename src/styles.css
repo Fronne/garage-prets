@@ -207,6 +207,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 
 /* Logo de la marque à la place de la petite voiture */
 .ico svg.i.brand { width: 24px; height: 24px; fill: currentColor; stroke: none }
+.ico svg.i.app { stroke-width: 1.2 }
 /* Question « Enregistrer ? » : la fenêtre descend hors de l'écran et remonte si on continue */
 .sheet { transition: transform 200ms var(--ease) }
 .sheet.away { transform: translateY(110%) }

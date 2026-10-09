@@ -1,5 +1,5 @@
 import { LOGOS, MOTS } from './brands'
-import { Car } from './icons'
+import { AppIcon } from './icons'
 
 // Marque reconnue dans le nom (« Clio grise » -> renault, « 208 blanche » -> peugeot), sinon null
 export function marque(nom: string): string | null {
@@ -20,7 +20,7 @@ export function marque(nom: string): string | null {
 // Logo de la marque de la voiture, ou la petite voiture si on ne la reconnaît pas
 export function Logo({ nom }: { nom: string }) {
   const b = marque(nom)
-  if (!b) return <Car />
+  if (!b) return <AppIcon className="i app" />
   return (
     <svg className="i brand" viewBox="0 0 24 24" aria-hidden="true">
       <path d={LOGOS[b]} />
