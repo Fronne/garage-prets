@@ -1,8 +1,8 @@
-import { User } from './icons'
+import { List, User } from './icons'
 import { Sheet, SheetHead } from './Sheet'
 
-// Qui est connecté sur ce téléphone, et le bouton pour laisser la place à quelqu'un d'autre
-export function MoiSheet({ moi, onClose, onChanger }: { moi: string; onClose: () => void; onChanger: () => void }) {
+// Qui est connecté sur ce téléphone, l'accès au parc (rarement utile, donc pas dans la barre du bas) et le bouton pour laisser la place à quelqu'un d'autre
+export function MoiSheet({ moi, onClose, onChanger, onParc }: { moi: string; onClose: () => void; onChanger: () => void; onParc?: () => void }) {
   return (
     <Sheet onClose={onClose}>
       {(close) => (
@@ -15,6 +15,18 @@ export function MoiSheet({ moi, onClose, onChanger }: { moi: string; onClose: ()
             <span className="moi-n">{moi}</span>
             <span className="auto">Tes prêts sont enregistrés à ton nom.</span>
           </div>
+          {onParc && (
+            <button
+              className="cta alt"
+              onClick={() => {
+                onParc()
+                close()
+              }}
+            >
+              <List />
+              Gérer le parc
+            </button>
+          )}
           <button className="cta alt" onClick={onChanger}>
             <User />
             Changer de personne

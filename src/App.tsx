@@ -10,7 +10,7 @@ import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { enAttente, envoyer, vider } from './envois'
-import { Car, Clock, List } from './icons'
+import { Car, Clock } from './icons'
 import { Historique } from './Historique'
 
 const CACHE_KEY = 'garage.cache'
@@ -24,7 +24,9 @@ type SheetState =
   | null
 
 type Page = 'prets' | 'parc' | 'histo'
-const PAGES: Page[] = ['prets', 'parc', 'histo']
+// Ordre des pages pour le sens de l'animation ; on glisse seulement entre les onglets du bas
+const PAGES: Page[] = ['prets', 'histo', 'parc']
+const ONGLETS: Page[] = ['prets', 'histo']
 
 type Toast = { msg: string; undo?: () => void; error?: boolean; id?: number } | null
 
@@ -84,12 +86,18 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         return window.dispatchEvent(new Event('sheet-back'))
       }
       setPage(history.state?.page ?? 'prets')
+      // « Gérer le parc » touché dans le menu : on y va une fois la fenêtre refermée
+      if (parcApres.current) {
+        parcApres.current = false
+        allerRef.current('parc')
+      }
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
   // Une fenêtre ouverte ajoute une étape à l'historique du téléphone : le geste retour la ferme au lieu de quitter l'appli
   const sheetOpen = useRef(false)
+  const parcApres = useRef(false)
   sheetOpen.current = sheet !== null
   useEffect(() => {
     if (sheet === null) return
@@ -190,8 +198,9 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       const dx = t.clientX - s0.x
       const dy = t.clientY - s0.y
       if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5 || Date.now() - s0.t > 700) return
-      const i = PAGES.indexOf(pageRef.current) + (dx < 0 ? 1 : -1)
-      if (i >= 0 && i < PAGES.length) allerRef.current(PAGES[i])
+      const i = ONGLETS.indexOf(pageRef.current)
+      const j = i + (dx < 0 ? 1 : -1)
+      if (i >= 0 && j >= 0 && j < ONGLETS.length) allerRef.current(ONGLETS[j])
     }
     document.addEventListener('touchstart', down, { passive: true })
     document.addEventListener('touchend', up, { passive: true })
@@ -208,7 +217,9 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     const placer = (anim: boolean) => {
       const nav = navRef.current
       const ico = nav?.querySelector('button[aria-current] svg')
-      if (!nav || !ico) return
+      if (!nav) return
+      // Sur la page Parc, aucun onglet n'est actif : pas de pastille
+      if (!ico) return setPastille(null)
       const n = nav.getBoundingClientRect()
       const r = ico.getBoundingClientRect()
       setPastille({ x: r.left - n.left, y: r.top - n.top, anim })
@@ -347,7 +358,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       />
     )
   } else if (sheet?.kind === 'moi') {
-    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} />
+    sheetEl = <MoiSheet moi={data.moi} onClose={close} onChanger={onLogout} onParc={page === 'parc' ? undefined : () => (parcApres.current = true)} />
   }
 
   // Contenu d'un onglet
@@ -392,7 +403,6 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         {(
           [
             ['prets', <Car key="i" />, 'Prêts'],
-            ['parc', <List key="i" />, 'Parc'],
             ['histo', <Clock key="i" />, 'Historique'],
           ] as const
         ).map(([id, icon, label]) => (
