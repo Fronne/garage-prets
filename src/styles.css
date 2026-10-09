@@ -208,6 +208,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .equipe li:last-child { border-bottom: 0 }
 .equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
 .indispo-why { display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 16px; padding: 14px 16px; font-size: 1.0625rem; font-weight: 700 }
+.plaque-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px }
+.plaque-ligne .plate { align-self: center }
 .raccourcis { display: flex; flex-direction: column; gap: 10px }
 /* Plusieurs boutons empilés : pas de bouton collé en bas avec sa bande blanche, qui cacherait le bas du précédent */
 .sheet .raccourcis .cta { position: static; box-shadow: none }

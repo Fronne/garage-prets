@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
 import { photoUrl } from './api'
-import { Check, Phone, Plate, Warn } from './icons'
+import { Check, Pen, Phone, Plate, Warn } from './icons'
 import { Sheet, SheetHead } from './Sheet'
 import { days, depuis, fmt, fmtS, isLate, telHref } from './util'
 
@@ -37,7 +37,14 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
               <span className="st st-out">Prêtée · {depuis(p.depart)}</span>
             )}
           </SheetHead>
-          <Plate immat={v.immat} />
+          {/* Modifier, c'est un réglage : en haut près de la plaque ; en bas, seulement l'action principale */}
+          <div className="plaque-ligne">
+            <Plate immat={v.immat} />
+            <button className="pill" onClick={onModifier}>
+              <Pen />
+              Modifier
+            </button>
+          </div>
           <div className="who-card">
             <div className="who-l">
               <span className="sub">Chez</span>
@@ -108,9 +115,6 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
           >
             <Check />
             Voiture rendue
-          </button>
-          <button className="link" onClick={onModifier}>
-            Modifier le prêt
           </button>
         </>
       )}

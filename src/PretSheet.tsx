@@ -80,7 +80,16 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
           <SheetHead title={title}>
             {pret && <span className="sub">{v.nom}</span>}
           </SheetHead>
-          <Plate immat={v.immat} />
+          {/* Gérer la voiture, c'est un réglage : en haut près de la plaque ; en bas, seulement « Prêter » */}
+          <div className="plaque-ligne">
+            <Plate immat={v.immat} />
+            {!pret && (
+              <button type="button" className="pill" onClick={onEditVehicule}>
+                <Pen />
+                Gérer
+              </button>
+            )}
+          </div>
           <form
             className="f"
             noValidate
@@ -175,11 +184,6 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
               <Check />
               {pret ? 'Enregistrer' : 'Prêter la ' + v.nom}
             </button>
-            {!pret && (
-              <button type="button" className="link" onClick={onEditVehicule}>
-                Gérer cette voiture
-              </button>
-            )}
           </form>
         </>
       )}
