@@ -33,6 +33,7 @@ export function RaccourcisSheet({ v, p, onClose, onRendue, onIndispo, onRemettre
                 {p ? ' · ' + p.client : ''}
               </span>
             </SheetHead>
+            {/* L'action principale en dernier, près du pouce, comme dans la fiche de la voiture */}
             <div className="raccourcis">
               {p?.tel && (
                 <a className="cta" href={telHref(p.tel)} onClick={() => setTimeout(close, 300)}>
@@ -40,6 +41,10 @@ export function RaccourcisSheet({ v, p, onClose, onRendue, onIndispo, onRemettre
                   Appeler {p.client}
                 </a>
               )}
+              <button className="cta alt" onClick={puis(onHistorique)}>
+                <Clock />
+                Voir l'historique de la voiture
+              </button>
               {p && (
                 <button className="cta ok" onClick={puis(onRendue)}>
                   <Check />
@@ -54,15 +59,11 @@ export function RaccourcisSheet({ v, p, onClose, onRendue, onIndispo, onRemettre
               )}
               {!p && !estIndispo(v) && (
                 // La fenêtre « Mettre de côté » remplace celle-ci : pas de close(), qui fermerait aussi la suivante
-                <button className="cta alt" onClick={onIndispo}>
+                <button className="cta" onClick={onIndispo}>
                   <Wrench />
                   Mettre de côté
                 </button>
               )}
-              <button className="cta alt" onClick={puis(onHistorique)}>
-                <Clock />
-                Voir l'historique de la voiture
-              </button>
             </div>
           </>
         )
