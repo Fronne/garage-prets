@@ -100,7 +100,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
             </>
           )}
           <button
-            className="cta ok"
+            className="cta"
             onClick={() => {
               onRendue()
               close()

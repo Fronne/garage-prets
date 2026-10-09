@@ -47,10 +47,10 @@ L'orange de l'état « prêtée » est bien celui du garage : une voiture prêt�
 
 ### Boutons
 
-- **Action principale** (prêter, enregistrer, entrer) : grand bouton `nuit`, texte `on-nuit`.
+- **Action principale** (prêter, enregistrer, entrer, « Voiture rendue », « Remettre disponible ») : grand bouton `nuit`, texte `on-nuit`. Toutes les actions principales ont cette couleur, sans exception.
 - **Appeler le client** : sur une fiche (voiture prêtée, historique), bouton rond `nuit`, téléphone blanc (`on-nuit`), pour qu'on le repère comme la seule action au milieu des informations. Dans une liste de boutons (menu des raccourcis), bouton secondaire comme les autres : la couleur reste à l'action principale. Jamais vert : appeler est une action, pas un état.
 - **Une seule action en couleur par fenêtre**, placée en dernier, près du pouce.
-- **« Voiture rendue »** : vert, car la voiture redevient disponible.
+- **Le vert n'est jamais un bouton** : il dit l'état « disponible ». Après « Voiture rendue » ou « Remettre disponible », c'est la carte qui passe en vert « Dispo ».
 - **Actions secondaires** (modifier, voir l'historique) : fond `surface`, texte `ink`, filet `line`.
 - **Case déjà remplie ou choisie** (date de retour, téléphone, note, client récent) : cadre `nuit`, fond bleu très léger, texte et icône `nuit`. Jamais vert : être rempli ne veut pas dire « disponible ».
 - L'orange n'est jamais la couleur d'un bouton.

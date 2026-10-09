@@ -46,13 +46,13 @@ export function RaccourcisSheet({ v, p, onClose, onRendue, onIndispo, onRemettre
                 Voir l'historique de la voiture
               </button>
               {p && (
-                <button className="cta ok" onClick={puis(onRendue)}>
+                <button className="cta" onClick={puis(onRendue)}>
                   <Check />
                   Voiture rendue
                 </button>
               )}
               {!p && estIndispo(v) && (
-                <button className="cta ok" onClick={puis(onRemettre)}>
+                <button className="cta" onClick={puis(onRemettre)}>
                   <Check />
                   Remettre disponible
                 </button>

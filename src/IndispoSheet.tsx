@@ -35,7 +35,7 @@ export function IndispoSheet({ v, onClose, onSet }: { v: Vehicule; onClose: () =
               <span>{v.indispo || 'Pas de raison notée'}</span>
             </div>
             <button
-              className="cta ok"
+              className="cta"
               onClick={() => {
                 onSet(null)
                 close()

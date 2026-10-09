@@ -9,7 +9,7 @@
   --out: #a8520a; --out-mid: #f28c28; --out-bg: #fdebd8;
   --late: #be123c; --late-mid: #f43f5e; --late-soft: #fdecef;
   --off: #5b6b7d; --off-mid: #8a9aab; --off-bg: #eceff3; /* indisponible : gris acier */
-  --cta: #0f2a44; --on-cta: #ffffff; --done: #047857;
+  --cta: #0f2a44; --on-cta: #ffffff; /* toute action principale, « Voiture rendue » comprise : le vert est un état, pas une action */
   --eu: #003399; --on-eu: #ffffff; --focus: #a8520a;
   --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fd: 'Archivo', 'Arial Black', system-ui, sans-serif; /* titres */
@@ -116,7 +116,6 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .opt.done { background: #eaf0f6; border-color: var(--ink); color: var(--ink) }
 .opt[aria-expanded='true'] { border-color: var(--ink) }
 .cta { min-height: 64px; border: 0; border-radius: 16px; background: var(--cta); color: var(--on-cta); font-size: 1.25rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0 16px }
-.cta.ok { background: var(--done); color: var(--on-ok) }
 /* Le bouton principal reste visible en bas de la fenêtre, même quand le clavier en réduit la hauteur */
 .sheet { scroll-padding-bottom: 96px }
 .sheet:focus { outline: none }
