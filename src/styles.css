@@ -18,9 +18,10 @@
   --scrim-soft: rgba(15, 42, 68, 0.35); --shadow-sheet: rgba(15, 42, 68, 0.18); --shadow-pop: rgba(15, 42, 68, 0.25); --focus-soft: rgba(15, 42, 68, 0.1);
   --t: 200ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* Mode sombre (réglage du téléphone) : valeurs sombres de la charte. Les fonds bleu nuit s'éclaircissent un peu pour se détacher du fond. */
+/* Mode sombre : valeurs sombres de la charte. Les fonds bleu nuit s'éclaircissent un peu pour se détacher du fond.
+   Choix dans « Sur ce téléphone » (src/theme.ts) : Auto suit le réglage du téléphone, Clair ou Sombre l'imposent. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     color-scheme: dark;
     --bg: #0b1622; --surface: #132232; --ink: #eef2f6; --slate: #c9d3de; --muted: #9aabbd; --line: #22364a; --scrim: rgba(0, 0, 0, 0.6);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
@@ -34,6 +35,20 @@
     --plate-line: #22364a; --dash: #2e445a; --faint: #4a5d72;
     --scrim-soft: rgba(0, 0, 0, 0.5); --shadow-sheet: rgba(0, 0, 0, 0.5); --shadow-pop: rgba(0, 0, 0, 0.55); --focus-soft: rgba(245, 154, 61, 0.2);
   }
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0b1622; --surface: #132232; --ink: #eef2f6; --slate: #c9d3de; --muted: #9aabbd; --line: #22364a; --scrim: rgba(0, 0, 0, 0.6);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
+  --shadow-up: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.4);
+  --ok: #34d399; --ok-mid: #10b981; --ok-bg: #0e2a20;
+  --out: #f59a3d; --out-mid: #f28c28; --out-bg: #3a2410;
+  --late: #fb7185; --late-mid: #f43f5e; --late-soft: #2e1219; --late-line: #5a1f2c;
+  --off: #9aabbd; --off-mid: #5b6b7d; --off-bg: #1c2836;
+  --cta: #1e4670; --done: #047857; --focus: #f59a3d;
+  --nuit: #1e4670; --nuit-soft: #1a3350;
+  --plate-line: #22364a; --dash: #2e445a; --faint: #4a5d72;
+  --scrim-soft: rgba(0, 0, 0, 0.5); --shadow-sheet: rgba(0, 0, 0, 0.5); --shadow-pop: rgba(0, 0, 0, 0.55); --focus-soft: rgba(245, 154, 61, 0.2);
 }
 * { box-sizing: border-box }
 html, body { margin: 0; min-height: 100% }
@@ -228,6 +243,9 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
 .liens { display: flex; flex-direction: column; align-items: center; gap: 8px }
 .indispo-why { display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 16px; padding: 14px 16px; font-size: 1.0625rem; font-weight: 700 }
+.themes { display: flex; flex-direction: column; gap: 8px }
+.themes > span { font-size: 0.875rem; font-weight: 600; color: var(--muted) }
+.themes .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
 .cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */

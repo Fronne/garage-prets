@@ -5,6 +5,10 @@ import '@fontsource/archivo/latin-700.css'
 import '@fontsource/archivo/latin-800.css'
 import App from './App'
 import './styles.css'
+import { appliquerTheme, lireTheme } from './theme'
+
+// Avant le premier affichage, pour ne pas voir l'autre thème une fraction de seconde
+appliquerTheme(lireTheme())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
