@@ -36,7 +36,7 @@ export function RaccourcisSheet({ v, p, onClose, onRendue, onIndispo, onRemettre
             {/* L'action principale en dernier, près du pouce, comme dans la fiche de la voiture */}
             <div className="raccourcis">
               {p?.tel && (
-                <a className="cta" href={telHref(p.tel)} onClick={() => setTimeout(close, 300)}>
+                <a className="cta alt" href={telHref(p.tel)} onClick={() => setTimeout(close, 300)}>
                   <Phone />
                   Appeler {p.client}
                 </a>
