@@ -3,7 +3,7 @@ import { Resvg } from '@resvg/resvg-js'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-const INK = '#111827'
+const INK = '#0F2A44' // bleu nuit de la charte Canal Mhirsi Service
 // Silhouette de Golf en trait fin (choix de Cyril, 2026-10-09)
 const CAR =
   '<path d="M4.95 16H3.3C2.6 16 2.3 15.4 2.4 14.7L2.6 12.9C2.7 11.9 3.1 11 3.7 10.3L4.5 9.5C5 9 5.7 8.8 6.6 8.8L11.6 8.7C12.8 8.7 13.7 9 14.5 9.6L17.4 11.6C17.9 11.95 18.5 12.1 19.1 12.2L20.6 12.5C21.6 12.7 22.3 13.4 22.3 14.4V15.1C22.3 15.6 21.9 16 21.4 16H19.65M8.65 16H15.95"/>' +
