@@ -97,7 +97,7 @@ svg.i.app { stroke-width: 1.2 } /* la voiture de l'icône remplit tout le carré
 .x { margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none }
 .st { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; padding: 4px 10px; border-radius: 999px }
 .st svg { width: 14px; height: 14px }
-.st-out { background: var(--out-bg); color: var(--out) } .st-off { background: var(--off-bg); color: var(--off) } .st svg { width: 14px; height: 14px } .st-late { background: var(--late-soft); color: var(--late) }
+.st-ok { background: var(--ok-bg); color: var(--ok) } .st-out { background: var(--out-bg); color: var(--out) } .st-off { background: var(--off-bg); color: var(--off) } .st svg { width: 14px; height: 14px } .st-late { background: var(--late-soft); color: var(--late) }
 form.f { display: flex; flex-direction: column; gap: 14px }
 label.q { font-size: 1.25rem; font-weight: 800 }
 .inp { min-height: 60px; border: 2px solid var(--ink); border-radius: 12px; padding: 0 16px; font-size: 1.25rem; background: var(--surface); width: 100% }
@@ -209,6 +209,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .equipe li:last-child { border-bottom: 0 }
 .equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
 .indispo-why { display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 16px; padding: 14px 16px; font-size: 1.0625rem; font-weight: 700 }
+.raccourcis { display: flex; flex-direction: column; gap: 10px }
+a.cta { text-decoration: none }
 .cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */

@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
 import { Check, Clock, Home, Plate, Plus, User, Warn, Wrench } from './icons'
 import { estIndispo } from './IndispoSheet'
+import { useAppuiLong } from './appuiLong'
 import { Logo } from './Logo'
 import { days, fmtS, isLate } from './util'
 
@@ -12,14 +13,18 @@ type Props = {
   first: boolean
   onPreter: (v: Vehicule) => void
   onIndispo: (v: Vehicule) => void
+  onRaccourcis: (v: Vehicule) => void
   onVoir: (p: Pret) => void
   onAjouter: () => void
   onMoi: () => void
 }
 
+type AppuiLong = ReturnType<ReturnType<typeof useAppuiLong>>
+
 let dejaPulse = false
 
-export function Board({ data, offline, attente, first, onPreter, onIndispo, onVoir, onAjouter, onMoi }: Props) {
+export function Board({ data, offline, attente, first, onPreter, onIndispo, onRaccourcis, onVoir, onAjouter, onMoi }: Props) {
+  const appuiLong = useAppuiLong()
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
   // En retard, puis prêtées (la plus ancienne d'abord), puis dispo, puis indisponibles
   const rank = (v: Vehicule) => {
@@ -112,9 +117,10 @@ export function Board({ data, offline, attente, first, onPreter, onIndispo, onVo
         {vus.map((v) => {
           const p = actifs.get(v.id)
           const fl = flash.includes(v.id)
-          if (p) return <Out key={v.id} v={v} p={p} flash={fl} onClick={() => onVoir(p)} />
-          if (estIndispo(v)) return <Indispo key={v.id} v={v} flash={fl} onClick={() => onIndispo(v)} />
-          return <Dispo key={v.id} v={v} flash={fl} onClick={() => onPreter(v)} />
+          const lp = appuiLong(() => onRaccourcis(v))
+          if (p) return <Out key={v.id} v={v} p={p} flash={fl} lp={lp} onClick={() => onVoir(p)} />
+          if (estIndispo(v)) return <Indispo key={v.id} v={v} flash={fl} lp={lp} onClick={() => onIndispo(v)} />
+          return <Dispo key={v.id} v={v} flash={fl} lp={lp} onClick={() => onPreter(v)} />
         })}
         {/* Ajouter une voiture se fait dans « Le parc » ; ici seulement tant que le parc est vide */}
         {vs.length > 0 && vus.length === 0 && (
@@ -142,9 +148,9 @@ export function Avatar({ moi, onClick }: { moi: string; onClick: () => void }) {
   )
 }
 
-function Dispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: () => void }) {
+function Dispo({ v, flash, lp, onClick }: { v: Vehicule; flash: boolean; lp: AppuiLong; onClick: () => void }) {
   return (
-    <button className={'tile t-ok' + (flash ? ' flash' : '')} data-id={v.id} data-etat="ok" onClick={onClick} aria-label={`${v.nom}, dispo. Toucher pour prêter`}>
+    <button {...lp} className={'tile t-ok' + (flash ? ' flash' : '')} data-id={v.id} data-etat="ok" onClick={onClick} aria-label={`${v.nom}, dispo. Toucher pour prêter`}>
       <span className="top">
         <span className="ico">
           <Logo nom={v.nom} />
@@ -172,9 +178,9 @@ function depuisCourt(iso: string | null | undefined) {
   return n <= 0 ? "Aujourd'hui" : n === 1 ? 'Depuis hier' : `Depuis ${n} j`
 }
 
-function Indispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: () => void }) {
+function Indispo({ v, flash, lp, onClick }: { v: Vehicule; flash: boolean; lp: AppuiLong; onClick: () => void }) {
   return (
-    <button className={'tile t-off' + (flash ? ' flash' : '')} data-id={v.id} data-etat="off" onClick={onClick} aria-label={`${v.nom}, indisponible. Toucher pour la remettre disponible`}>
+    <button {...lp} className={'tile t-off' + (flash ? ' flash' : '')} data-id={v.id} data-etat="off" onClick={onClick} aria-label={`${v.nom}, indisponible. Toucher pour la remettre disponible`}>
       <span className="top">
         <span className="ico">
           <Logo nom={v.nom} />
@@ -198,12 +204,13 @@ function Indispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: 
   )
 }
 
-function Out({ v, p, flash, onClick }: { v: Vehicule; p: Pret; flash: boolean; onClick: () => void }) {
+function Out({ v, p, flash, lp, onClick }: { v: Vehicule; p: Pret; flash: boolean; lp: AppuiLong; onClick: () => void }) {
   const late = isLate(p)
   const n = days(p.depart, Date.now())
   const since = late ? 'Prévue le ' + fmtS(p.retour_prevu!) : n <= 0 ? "Depuis aujourd'hui" : n === 1 ? 'Depuis hier' : `Depuis ${n} jours`
   return (
     <button
+      {...lp}
       className={'tile ' + (late ? 't-late' : 't-out') + (flash ? ' flash' : '')}
       data-id={v.id}
       data-etat={late ? 'late' : 'out'}

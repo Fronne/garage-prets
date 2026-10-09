@@ -11,6 +11,7 @@ import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { EquipeSheet } from './EquipeSheet'
 import { IndispoSheet, estIndispo } from './IndispoSheet'
+import { RaccourcisSheet } from './RaccourcisSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { AppIcon, Clock } from './icons'
 import { Historique, chercherDansHistorique, prechargerHistorique } from './Historique'
@@ -25,6 +26,7 @@ type SheetState =
   | { kind: 'moi' }
   | { kind: 'equipe' }
   | { kind: 'indispo'; vid: string }
+  | { kind: 'raccourcis'; vid: string }
   | null
 
 type Page = 'prets' | 'parc' | 'histo'
@@ -391,6 +393,24 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   } else if (sheet?.kind === 'indispo') {
     const v = veh(sheet.vid)
     if (v) sheetEl = <IndispoSheet key={v.id + (v.indispo ?? '')} v={v} onClose={close} onSet={(m) => indispo(v, m)} />
+  } else if (sheet?.kind === 'raccourcis') {
+    const v = veh(sheet.vid)
+    const p = v && data.prets.find((x) => x.vehicule_id === v.id && !x.retour)
+    if (v)
+      sheetEl = (
+        <RaccourcisSheet
+          v={v}
+          p={p}
+          onClose={close}
+          onRendue={() => p && rendue(p, v)}
+          onIndispo={() => setSheet({ kind: 'indispo', vid: v.id })}
+          onRemettre={() => indispo(v, null)}
+          onHistorique={() => {
+            chercherDansHistorique(v.immat || v.nom)
+            pageApres.current = 'histo'
+          }}
+        />
+      )
   } else if (sheet?.kind === 'equipe') {
     sheetEl = <EquipeSheet moi={data.moi} onClose={close} />
   }
@@ -414,6 +434,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         first={first}
         onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
         onIndispo={(v) => setSheet({ kind: 'indispo', vid: v.id })}
+        onRaccourcis={(v) => setSheet({ kind: 'raccourcis', vid: v.id })}
         onVoir={(pr) => setSheet({ kind: 'voir', pid: pr.id })}
         onAjouter={() => setSheet({ kind: 'vehicule' })}
         onMoi={() => setSheet({ kind: 'moi' })}
