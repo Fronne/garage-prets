@@ -8,6 +8,7 @@
   --ok: #047857; --ok-mid: #10b981; --ok-bg: #e6f6ef; --on-ok: #ffffff;
   --out: #a8520a; --out-mid: #f28c28; --out-bg: #fdebd8;
   --late: #be123c; --late-mid: #f43f5e; --late-soft: #fdecef;
+  --off: #5b6b7d; --off-mid: #8a9aab; --off-bg: #eceff3; /* indisponible : gris acier */
   --cta: #0f2a44; --on-cta: #ffffff; --done: #047857;
   --eu: #003399; --on-eu: #ffffff; --focus: #a8520a;
   --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -44,8 +45,9 @@ button.count:active { transform: scale(0.94) }
 .count.c-ok[aria-pressed='true'] { background: var(--ok-bg); border-color: var(--ok-mid); color: var(--ok) }
 .count.c-out[aria-pressed='true'] { background: var(--out-bg); border-color: var(--out-mid); color: var(--out) }
 .count.c-late[aria-pressed='true'] { background: var(--late-soft); border-color: var(--late-mid); color: var(--late) }
+.count.c-off[aria-pressed='true'] { background: var(--off-bg); border-color: var(--off-mid); color: var(--off) }
 .grid .vide { grid-column: 1 / -1; border: 1px dashed var(--line); background: none; border-radius: 16px; padding: 24px 16px; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer }
-.c-ok::before { background: var(--ok-mid) } .c-out::before { background: var(--out-mid) } .c-late::before { background: var(--late-mid) }
+.c-ok::before { background: var(--ok-mid) } .c-out::before { background: var(--out-mid) } .c-late::before { background: var(--late-mid) } .c-off::before { background: var(--off-mid) }
 .offline { font-size: 0.8125rem; font-weight: 600; color: var(--out) }
 
 /* Plaque d'immatriculation */
@@ -70,10 +72,12 @@ svg.i.app { stroke-width: 1.2 } /* la voiture de l'icône remplit tout le carré
 .tile .st svg { width: 13px; height: 13px; stroke-width: 2.2 }
 .tile .foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; width: 100%; padding-top: 10px; border-top: 1px solid var(--line) }
 .tile .who { display: flex; align-items: center; gap: 6px; font-size: 0.9375rem; font-weight: 600; overflow-wrap: anywhere }
+.tile .une-ligne { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .tile .since { display: flex; align-items: center; gap: 6px; font-size: 0.875rem; color: var(--muted) }
 .tile .who svg, .tile .since svg { width: 15px; height: 15px; flex: none; stroke-width: 1.8; color: var(--muted) }
 .t-ok .ico, .t-ok .st { background: var(--ok-bg); color: var(--ok) } .t-ok .who { color: var(--muted); font-weight: 500 }
 .t-out .ico, .t-out .st { background: var(--out-bg); color: var(--out) }
+.t-off .ico, .t-off .st { background: var(--off-bg); color: var(--off) } .t-off { background: var(--bg); box-shadow: none } .t-off .nm { color: var(--slate) } .t-off .ico svg.brand { opacity: 0.6 }
 .t-late { border-color: var(--late-line) }
 .t-late .st::before { display: none }
 .t-late .ico, .t-late .st { background: var(--late-soft); color: var(--late) }
@@ -93,7 +97,7 @@ svg.i.app { stroke-width: 1.2 } /* la voiture de l'icône remplit tout le carré
 .x { margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none }
 .st { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8125rem; font-weight: 600; padding: 4px 10px; border-radius: 999px }
 .st svg { width: 14px; height: 14px }
-.st-out { background: var(--out-bg); color: var(--out) } .st-late { background: var(--late-soft); color: var(--late) }
+.st-out { background: var(--out-bg); color: var(--out) } .st-off { background: var(--off-bg); color: var(--off) } .st svg { width: 14px; height: 14px } .st-late { background: var(--late-soft); color: var(--late) }
 form.f { display: flex; flex-direction: column; gap: 14px }
 label.q { font-size: 1.25rem; font-weight: 800 }
 .inp { min-height: 60px; border: 2px solid var(--ink); border-radius: 12px; padding: 0 16px; font-size: 1.25rem; background: var(--surface); width: 100% }
@@ -184,7 +188,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .parc button:active { transform: none; background: var(--bg) }
 .parc .ico { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none }
 .parc .ico svg { width: 24px; height: 24px; stroke-width: 1.6 }
-.parc .t-ok { background: var(--ok-bg); color: var(--ok) } .parc .t-out { background: var(--out-bg); color: var(--out) } .parc .t-late { background: var(--late-soft); color: var(--late) }
+.parc .t-ok { background: var(--ok-bg); color: var(--ok) } .parc .t-out { background: var(--out-bg); color: var(--out) } .parc .t-late { background: var(--late-soft); color: var(--late) } .parc .t-off { background: var(--off-bg); color: var(--off) }
 .pc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px }
 .pc-nm { font-weight: 700; font-size: 1.0625rem; overflow-wrap: anywhere }
 .pc-sub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.875rem; color: var(--muted) }
@@ -204,6 +208,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .equipe li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; border-bottom: 1px solid var(--line) }
 .equipe li:last-child { border-bottom: 0 }
 .equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
+.liens { display: flex; flex-direction: column; align-items: center; gap: 8px }
+.indispo-why { display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 16px; padding: 14px 16px; font-size: 1.0625rem; font-weight: 700 }
 .cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */
@@ -301,7 +307,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 @keyframes toast-in { from { opacity: 0; transform: translateY(calc(100% + 24px)) } }
 
 /* Carte qui vient de changer d'état : un halo de sa couleur et une coche sur le logo */
-.t-ok { --c: var(--ok) } .t-out { --c: var(--out) } .t-late { --c: var(--late) }
+.t-ok { --c: var(--ok) } .t-out { --c: var(--out) } .t-late { --c: var(--late) } .t-off { --c: var(--off) }
 .tile.flash { animation: halo 900ms var(--ease) }
 @keyframes halo { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent) } to { box-shadow: 0 0 0 14px transparent } }
 .tile .ico { position: relative }

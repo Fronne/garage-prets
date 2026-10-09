@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Pret, SyncData, Vehicule } from '../shared/types'
-import { Check, Clock, Home, Plate, Plus, User, Warn } from './icons'
+import { Check, Clock, Home, Plate, Plus, User, Warn, Wrench } from './icons'
+import { estIndispo } from './IndispoSheet'
 import { Logo } from './Logo'
 import { days, fmtS, isLate } from './util'
 
@@ -10,6 +11,7 @@ type Props = {
   attente: number
   first: boolean
   onPreter: (v: Vehicule) => void
+  onIndispo: (v: Vehicule) => void
   onVoir: (p: Pret) => void
   onAjouter: () => void
   onMoi: () => void
@@ -17,12 +19,12 @@ type Props = {
 
 let dejaPulse = false
 
-export function Board({ data, offline, attente, first, onPreter, onVoir, onAjouter, onMoi }: Props) {
+export function Board({ data, offline, attente, first, onPreter, onIndispo, onVoir, onAjouter, onMoi }: Props) {
   const actifs = new Map(data.prets.filter((p) => !p.retour).map((p) => [p.vehicule_id, p]))
-  // En retard, puis prêtées (la plus ancienne d'abord), puis dispo
+  // En retard, puis prêtées (la plus ancienne d'abord), puis dispo, puis indisponibles
   const rank = (v: Vehicule) => {
     const p = actifs.get(v.id)
-    return p ? (isLate(p) ? 0 : 1) : 2
+    return p ? (isLate(p) ? 0 : 1) : estIndispo(v) ? 3 : 2
   }
   const vs = data.vehicules
     .slice()
@@ -34,14 +36,15 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
     )
   const nOut = actifs.size
   const nLate = vs.filter((v) => rank(v) === 0).length
-  const etat = (v: Vehicule) => ['late', 'out', 'ok'][rank(v)]
+  const nOff = vs.filter((v) => rank(v) === 3).length
+  const etat = (v: Vehicule) => ['late', 'out', 'ok', 'off'][rank(v)]
 
   // Toucher une pastille du haut n'affiche que ces voitures ; la retoucher les remontre toutes
-  const [filtre, setFiltre] = useState<'ok' | 'out' | 'late' | null>(null)
-  const f = filtre === 'late' && nLate === 0 ? null : filtre
-  const garde = (v: Vehicule) => !f || (f === 'ok' ? rank(v) === 2 : f === 'out' ? rank(v) < 2 : rank(v) === 0)
+  const [filtre, setFiltre] = useState<'ok' | 'out' | 'late' | 'off' | null>(null)
+  const f = (filtre === 'late' && nLate === 0) || (filtre === 'off' && nOff === 0) ? null : filtre
+  const garde = (v: Vehicule) => !f || (f === 'ok' ? rank(v) === 2 : f === 'out' ? rank(v) < 2 : f === 'off' ? rank(v) === 3 : rank(v) === 0)
   const vus = vs.filter(garde)
-  const pastille = (k: 'ok' | 'out' | 'late', texte: ReactNode) => (
+  const pastille = (k: 'ok' | 'out' | 'late' | 'off', texte: ReactNode) => (
     <button type="button" className={'count c-' + k} aria-pressed={f === k} onClick={() => setFiltre(f === k ? null : k)}>
       <span>{texte}</span>
     </button>
@@ -92,9 +95,10 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
           <Avatar moi={data.moi} onClick={onMoi} />
         </div>
         <div className="counts" role="group" aria-label="Filtrer les voitures">
-          {pastille('ok', <><Num n={vs.length - nOut} /> dispo</>)}
+          {pastille('ok', <><Num n={vs.length - nOut - nOff} /> dispo</>)}
           {pastille('out', <><Num n={nOut} /> prêtée{nOut > 1 ? 's' : ''}</>)}
           {nLate > 0 && pastille('late', <><Num n={nLate} /> en retard</>)}
+          {nOff > 0 && pastille('off', <><Num n={nOff} /> indispo</>)}
         </div>
         {attente > 0 ? (
           <div className="offline">
@@ -108,12 +112,14 @@ export function Board({ data, offline, attente, first, onPreter, onVoir, onAjout
         {vus.map((v) => {
           const p = actifs.get(v.id)
           const fl = flash.includes(v.id)
-          return p ? <Out key={v.id} v={v} p={p} flash={fl} onClick={() => onVoir(p)} /> : <Dispo key={v.id} v={v} flash={fl} onClick={() => onPreter(v)} />
+          if (p) return <Out key={v.id} v={v} p={p} flash={fl} onClick={() => onVoir(p)} />
+          if (estIndispo(v)) return <Indispo key={v.id} v={v} flash={fl} onClick={() => onIndispo(v)} />
+          return <Dispo key={v.id} v={v} flash={fl} onClick={() => onPreter(v)} />
         })}
         {/* Ajouter une voiture se fait dans « Le parc » ; ici seulement tant que le parc est vide */}
         {vs.length > 0 && vus.length === 0 && (
           <button type="button" className="vide" onClick={() => setFiltre(null)}>
-            Aucune voiture {f === 'ok' ? 'dispo' : f === 'out' ? 'prêtée' : 'en retard'}. Toucher pour tout voir.
+            Aucune voiture {f === 'ok' ? 'dispo' : f === 'out' ? 'prêtée' : f === 'off' ? 'indisponible' : 'en retard'}. Toucher pour tout voir.
           </button>
         )}
         {vs.length === 0 && (
@@ -154,6 +160,39 @@ function Dispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: ()
           Au garage
         </span>
         <span className="since">Touche pour prêter</span>
+      </span>
+    </button>
+  )
+}
+
+// Version courte pour tenir sur une ligne de la carte
+function depuisCourt(iso: string | null | undefined) {
+  if (!iso) return ''
+  const n = days(iso, Date.now())
+  return n <= 0 ? "Aujourd'hui" : n === 1 ? 'Depuis hier' : `Depuis ${n} j`
+}
+
+function Indispo({ v, flash, onClick }: { v: Vehicule; flash: boolean; onClick: () => void }) {
+  return (
+    <button className={'tile t-off' + (flash ? ' flash' : '')} data-id={v.id} data-etat="off" onClick={onClick} aria-label={`${v.nom}, indisponible. Toucher pour la remettre disponible`}>
+      <span className="top">
+        <span className="ico">
+          <Logo nom={v.nom} />
+          {flash && <Done />}
+        </span>
+        <span className="st">Indispo</span>
+      </span>
+      <span className="nm">{v.nom}</span>
+      <Plate immat={v.immat} />
+      <span className="foot">
+        <span className="who">
+          <Wrench />
+          <span className="une-ligne">{v.indispo || 'Indisponible'}</span>
+        </span>
+        <span className="since">
+          <Clock />
+          {depuisCourt(v.indispo_le)}
+        </span>
       </span>
     </button>
   )

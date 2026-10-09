@@ -110,7 +110,7 @@ app.use('/api/*', async (c, next) => {
 app.get('/api/sync', async (c) => {
   const since = new Date(Date.now() - HISTORY_DAYS * 86_400_000).toISOString()
   const [vehicules, prets] = await Promise.all([
-    c.env.DB.prepare('SELECT id, nom, immat FROM vehicules WHERE archive = 0 ORDER BY nom').all<Vehicule>(),
+    c.env.DB.prepare('SELECT id, nom, immat, indispo, indispo_le FROM vehicules WHERE archive = 0 ORDER BY nom').all<Vehicule>(),
     c.env.DB.prepare(
       `SELECT id, vehicule_id, client, tel, note, depart, retour_prevu, retour, photo_depart, photo_retour, par
        FROM prets WHERE retour IS NULL OR retour >= ? ORDER BY depart DESC LIMIT 1000`,
@@ -173,6 +173,22 @@ app.put('/api/vehicules/:id', async (c) => {
   return c.json({ ok: true })
 })
 
+// Met la voiture de côté (contrôle technique, réparation…) ou la remet disponible ({ motif: null })
+app.put('/api/vehicules/:id/indispo', async (c) => {
+  const b = await c.req.json().catch(() => ({}))
+  const id = c.req.param('id')
+  if (b.motif === null) {
+    await c.env.DB.prepare('UPDATE vehicules SET indispo = NULL, indispo_le = NULL WHERE id = ?').bind(id).run()
+    return c.json({ ok: true })
+  }
+  const dehors = await c.env.DB.prepare('SELECT 1 FROM prets WHERE vehicule_id = ? AND retour IS NULL').bind(id).first()
+  if (dehors) throw new HttpError(409, "Cette voiture est prêtée : note d'abord son retour.")
+  await c.env.DB.prepare('UPDATE vehicules SET indispo = ?, indispo_le = COALESCE(indispo_le, ?) WHERE id = ?')
+    .bind(text(b.motif, 60), heureTel(b.at), id)
+    .run()
+  return c.json({ ok: true })
+})
+
 // Retire la voiture de la grille ; ses anciens prêts restent en base
 app.delete('/api/vehicules/:id', async (c) => {
   const id = c.req.param('id')
@@ -214,11 +230,12 @@ app.post('/api/prets', async (c) => {
   const f = pretFields(b)
   const id = idFrom(b.id)
   const vehiculeId = text(b.vehicule_id, 40)
-  const v = await c.env.DB.prepare('SELECT 1 FROM vehicules WHERE id = ? AND archive = 0').bind(vehiculeId).first()
+  const v = await c.env.DB.prepare('SELECT indispo FROM vehicules WHERE id = ? AND archive = 0').bind(vehiculeId).first<{ indispo: string | null }>()
   if (!v) throw new HttpError(404, "Cette voiture n'existe plus.")
   const deja = await c.env.DB.prepare('SELECT id FROM prets WHERE vehicule_id = ? AND retour IS NULL').bind(vehiculeId).first<string>('id')
   if (deja === id) return c.json({ id })
   if (deja) throw new HttpError(409, 'Cette voiture vient d’être prêtée par quelqu’un d’autre.')
+  if (v.indispo !== null) throw new HttpError(409, 'Cette voiture est indisponible : remets-la disponible avant de la prêter.')
   // ON CONFLICT : un prêt renvoyé deux fois (réseau coupé pendant la réponse) n'est enregistré qu'une fois
   await c.env.DB.prepare(
     `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, photo_depart, par)

@@ -3,6 +3,7 @@ import { Avatar } from './Board'
 import { Chevron, Plate, Plus } from './icons'
 import { Logo } from './Logo'
 import { isLate } from './util'
+import { estIndispo } from './IndispoSheet'
 
 type Props = { data: SyncData; onMoi: () => void; onAjouter: () => void; onModifier: (v: Vehicule) => void }
 
@@ -36,14 +37,14 @@ export function Parc({ data, onMoi, onAjouter, onModifier }: Props) {
             return (
               <li key={v.id}>
                 <button onClick={() => onModifier(v)} aria-label={`Modifier ${v.nom}`}>
-                  <span className={'ico ' + (p ? (late ? 't-late' : 't-out') : 't-ok')}>
+                  <span className={'ico ' + (p ? (late ? 't-late' : 't-out') : estIndispo(v) ? 't-off' : 't-ok')}>
                     <Logo nom={v.nom} />
                   </span>
                   <span className="pc-main">
                     <span className="pc-nm">{v.nom}</span>
                     <span className="pc-sub">
                       <Plate immat={v.immat} />
-                      <span>{p ? (late ? 'En retard · ' : 'Chez ') + p.client : 'Au garage'}</span>
+                      <span>{p ? (late ? 'En retard · ' : 'Chez ') + p.client : estIndispo(v) ? 'Indisponible' + (v.indispo ? ' · ' + v.indispo : '') : 'Au garage'}</span>
                     </span>
                   </span>
                   <Chevron />

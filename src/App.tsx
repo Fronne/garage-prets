@@ -10,6 +10,7 @@ import { VehiculeSheet } from './VehiculeSheet'
 import { VoirSheet } from './VoirSheet'
 import { MoiSheet } from './MoiSheet'
 import { EquipeSheet } from './EquipeSheet'
+import { IndispoSheet } from './IndispoSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { AppIcon, Clock } from './icons'
 import { Historique, chercherDansHistorique, prechargerHistorique } from './Historique'
@@ -23,6 +24,7 @@ type SheetState =
   | { kind: 'vehicule'; vid?: string }
   | { kind: 'moi' }
   | { kind: 'equipe' }
+  | { kind: 'indispo'; vid: string }
   | null
 
 type Page = 'prets' | 'parc' | 'histo'
@@ -299,6 +301,14 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  function indispo(v: Vehicule, motif: string | null) {
+    const at = new Date().toISOString()
+    const maj = motif === null ? { indispo: null, indispo_le: null } : { indispo: motif, indispo_le: v.indispo_le ?? at }
+    change((d) => ({ ...d, vehicules: d.vehicules.map((x) => (x.id === v.id ? { ...x, ...maj } : x)) }), () => envoyer(`/vehicules/${v.id}/indispo`, 'PUT', { motif, at }), {
+      msg: motif === null ? v.nom + ' de nouveau disponible' : v.nom + ' mise de côté',
+    })
+  }
+
   function retirer(v: Vehicule) {
     change((d) => ({ ...d, vehicules: d.vehicules.filter((x) => x.id !== v.id) }), () => envoyer('/vehicules/' + v.id, 'DELETE'), {
       msg: v.nom + ' retirée du parc',
@@ -332,6 +342,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           onClose={close}
           onSubmit={(d) => (p ? modifier(p, d) : preter(v, d))}
           onEditVehicule={() => setSheet({ kind: 'vehicule', vid: v.id })}
+          onIndispo={() => setSheet({ kind: 'indispo', vid: v.id })}
         />
       )
     }
@@ -377,6 +388,9 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         onEquipe={() => setSheet({ kind: 'equipe' })}
       />
     )
+  } else if (sheet?.kind === 'indispo') {
+    const v = veh(sheet.vid)
+    if (v) sheetEl = <IndispoSheet key={v.id + (v.indispo ?? '')} v={v} onClose={close} onSet={(m) => indispo(v, m)} />
   } else if (sheet?.kind === 'equipe') {
     sheetEl = <EquipeSheet moi={data.moi} onClose={close} />
   }
@@ -399,6 +413,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
         attente={attente}
         first={first}
         onPreter={(v) => setSheet({ kind: 'preter', vid: v.id })}
+        onIndispo={(v) => setSheet({ kind: 'indispo', vid: v.id })}
         onVoir={(pr) => setSheet({ kind: 'voir', pid: pr.id })}
         onAjouter={() => setSheet({ kind: 'vehicule' })}
         onMoi={() => setSheet({ kind: 'moi' })}

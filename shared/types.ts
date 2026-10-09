@@ -2,6 +2,10 @@ export interface Vehicule {
   id: string
   nom: string
   immat: string | null
+  /** Raison de l'indisponibilité (vide si aucune) ; null = la voiture peut être prêtée */
+  indispo?: string | null
+  /** Date et heure ISO de la mise de côté */
+  indispo_le?: string | null
 }
 
 export interface Pret {
