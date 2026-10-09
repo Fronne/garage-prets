@@ -31,6 +31,8 @@
 }
 /* Atelier : appeler est une action, pas un état : bouton bleu nuit, téléphone blanc (le vert reste pour « disponible ») */
 :root[data-style='atelier'] .btn.call { background: var(--ink); color: #ffffff }
+/* Atelier : une case déjà remplie (retour, téléphone, note) est bleu nuit, pas verte : le vert ne veut dire que « disponible » */
+:root[data-style='atelier'] .opt.done { background: #eaf0f6; border-color: var(--ink); color: var(--ink) }
 * { box-sizing: border-box }
 html, body { margin: 0; min-height: 100% }
 body { background: var(--bg); color: var(--ink); font: 1rem/1.5 var(--f); -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain }
