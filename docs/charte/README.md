@@ -22,7 +22,7 @@ Trois couleurs font l'identité :
 | --- | --- | --- |
 | Bleu nuit `#0F2A44` | `nuit` | La couleur du garage : fond de l'icône, bouton principal, en-têtes foncés. En thème clair, c'est aussi la couleur du texte (`ink`). |
 | Orange atelier `#F28C28` | `atelier` | La touche qu'on remarque. Toujours en aplat, en petite quantité. |
-| Gris acier `#8A9AAB` | `acier` | Le métal de l'atelier, pour le décor. |
+| Gris acier `#8A9AAB` | `acier` | Le métal de l'atelier : le décor, et l'état « Indisponible ». |
 
 Règles :
 
@@ -41,6 +41,7 @@ L'appli montre l'état d'une voiture d'un coup d'œil, toujours avec un mot en p
 | Disponible | `vert` | `vert-soft` |
 | Prêtée | `atelier` (pastille) / `atelier-texte` (mot) | `atelier-soft` |
 | En retard | `rouge` | `rouge-soft` |
+| Indisponible (CT, réparation…) | `acier` (pastille) / `ink-muted` (mot) | `acier-soft` |
 
 L'orange de l'état « prêtée » est bien celui du garage : une voiture prêtée, c'est une voiture qui roule.
 
