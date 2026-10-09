@@ -10,45 +10,12 @@
   --late: #be123c; --late-mid: #f43f5e; --late-soft: #fdecef;
   --off: #5b6b7d; --off-mid: #8a9aab; --off-bg: #eceff3; /* indisponible : gris acier */
   --cta: #0f2a44; --on-cta: #ffffff; --done: #047857;
-  --nuit: #0f2a44; --on-nuit: #ffffff; --nuit-soft: #eaf0f6; /* fonds bleu nuit (boutons, cases choisies) : restent foncés en mode sombre */
   --eu: #003399; --on-eu: #ffffff; --focus: #a8520a;
   --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fd: 'Archivo', 'Arial Black', system-ui, sans-serif; /* titres */
   --plate-line: #dde3ea; --plate-ink: #0f2a44; --dash: #c5cfda; --faint: #b5c0cc; --late-line: #f9c9d3;
   --scrim-soft: rgba(15, 42, 68, 0.35); --shadow-sheet: rgba(15, 42, 68, 0.18); --shadow-pop: rgba(15, 42, 68, 0.25); --focus-soft: rgba(15, 42, 68, 0.1);
   --t: 200ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-/* Mode sombre : valeurs sombres de la charte. Les fonds bleu nuit s'éclaircissent un peu pour se détacher du fond.
-   Choix dans « Sur ce téléphone » (src/theme.ts) : Auto suit le réglage du téléphone, Clair ou Sombre l'imposent. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    color-scheme: dark;
-    --bg: #0b1622; --surface: #132232; --ink: #eef2f6; --slate: #c9d3de; --muted: #9aabbd; --line: #22364a; --scrim: rgba(0, 0, 0, 0.6);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
-    --shadow-up: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.4);
-    --ok: #34d399; --ok-mid: #10b981; --ok-bg: #0e2a20;
-    --out: #f59a3d; --out-mid: #f28c28; --out-bg: #3a2410;
-    --late: #fb7185; --late-mid: #f43f5e; --late-soft: #2e1219; --late-line: #5a1f2c;
-    --off: #9aabbd; --off-mid: #5b6b7d; --off-bg: #1c2836;
-    --cta: #1e4670; --done: #047857; --focus: #f59a3d;
-    --nuit: #1e4670; --nuit-soft: #1a3350;
-    --plate-line: #22364a; --dash: #2e445a; --faint: #4a5d72;
-    --scrim-soft: rgba(0, 0, 0, 0.5); --shadow-sheet: rgba(0, 0, 0, 0.5); --shadow-pop: rgba(0, 0, 0, 0.55); --focus-soft: rgba(245, 154, 61, 0.2);
-  }
-}
-:root[data-theme='dark'] {
-  color-scheme: dark;
-  --bg: #0b1622; --surface: #132232; --ink: #eef2f6; --slate: #c9d3de; --muted: #9aabbd; --line: #22364a; --scrim: rgba(0, 0, 0, 0.6);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px rgba(0, 0, 0, 0.25);
-  --shadow-up: 0 2px 6px rgba(0, 0, 0, 0.35), 0 12px 28px rgba(0, 0, 0, 0.4);
-  --ok: #34d399; --ok-mid: #10b981; --ok-bg: #0e2a20;
-  --out: #f59a3d; --out-mid: #f28c28; --out-bg: #3a2410;
-  --late: #fb7185; --late-mid: #f43f5e; --late-soft: #2e1219; --late-line: #5a1f2c;
-  --off: #9aabbd; --off-mid: #5b6b7d; --off-bg: #1c2836;
-  --cta: #1e4670; --done: #047857; --focus: #f59a3d;
-  --nuit: #1e4670; --nuit-soft: #1a3350;
-  --plate-line: #22364a; --dash: #2e445a; --faint: #4a5d72;
-  --scrim-soft: rgba(0, 0, 0, 0.5); --shadow-sheet: rgba(0, 0, 0, 0.5); --shadow-pop: rgba(0, 0, 0, 0.55); --focus-soft: rgba(245, 154, 61, 0.2);
 }
 * { box-sizing: border-box }
 html, body { margin: 0; min-height: 100% }
@@ -140,13 +107,13 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--focus-soft) }
 .chips { display: flex; flex-wrap: wrap; gap: 8px }
 .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; border: 2px solid var(--line); background: var(--surface) }
-.chip[aria-pressed='true'] { border-color: var(--nuit); background: var(--nuit); color: var(--on-nuit) }
+.chip[aria-pressed='true'] { border-color: var(--ink); background: var(--ink); color: var(--surface) }
 .sub { font-size: 0.8125rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em }
 .auto { font-size: 0.875rem; color: var(--muted) }
 .opts { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px dashed var(--line); padding-top: 16px }
 .opt { flex: 1 1 0; white-space: nowrap; min-width: 0; min-height: 50px; border: 2px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 0.875rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 0 8px }
 /* Case déjà remplie (retour, téléphone, note) : bleu nuit, pas vert */
-.opt.done { background: var(--nuit-soft); border-color: var(--ink); color: var(--ink) }
+.opt.done { background: #eaf0f6; border-color: var(--ink); color: var(--ink) }
 .opt[aria-expanded='true'] { border-color: var(--ink) }
 .cta { min-height: 64px; border: 0; border-radius: 16px; background: var(--cta); color: var(--on-cta); font-size: 1.25rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 0 16px }
 .cta.ok { background: var(--done); color: var(--on-ok) }
@@ -175,7 +142,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .tel { font-size: 0.875rem; font-weight: 600; user-select: all }
 .btn { border: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none }
 /* Appeler est une action, pas un état : bleu nuit, pas vert (le vert ne veut dire que « disponible ») */
-.btn.call { background: var(--nuit); color: var(--on-nuit); width: 52px; height: 52px; border-radius: 50%; flex: none }
+.btn.call { background: var(--ink); color: #ffffff; width: 52px; height: 52px; border-radius: 50%; flex: none }
 .kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; font-size: 0.875rem }
 .kv div { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
 .kv span:first-child { color: var(--muted) } .kv span:last-child { font-weight: 700; overflow-wrap: anywhere }
@@ -186,13 +153,13 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .hist span { color: var(--muted); white-space: nowrap }
 
 /* Message en bas avec « Annuler » */
-.toast { position: fixed; left: 16px; right: 16px; margin: 0 auto; max-width: 34rem; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--nuit); color: var(--on-nuit); padding: 8px 8px 8px 16px; border-radius: 12px; font-weight: 600; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; pointer-events: none; min-height: 52px }
+.toast { position: fixed; left: 16px; right: 16px; margin: 0 auto; max-width: 34rem; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 8px 8px 8px 16px; border-radius: 12px; font-weight: 600; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 16px; pointer-events: none; min-height: 52px }
 .toast.err-t { background: var(--late) }
 .toast button { pointer-events: auto; background: var(--surface); color: var(--ink); border: 0; border-radius: 10px; min-height: 44px; padding: 0 16px; font-weight: 800; cursor: pointer }
 
 /* Connexion */
 .login { max-width: 26rem; margin: 0 auto; padding: calc(48px + env(safe-area-inset-top, 0px)) 16px 32px; display: flex; flex-direction: column; gap: 24px }
-.login .logo { width: 64px; height: 64px; border-radius: 14px; background: var(--nuit); color: var(--on-nuit); display: flex; align-items: center; justify-content: center }
+.login .logo { width: 64px; height: 64px; border-radius: 14px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center }
 .login .logo svg { width: 47px; height: 47px } /* mêmes proportions que l'icône de l'appli */
 .login p { margin: 0; color: var(--muted) }
 .chip.big { min-height: 56px; padding: 0 24px; font-size: 1.125rem; font-weight: 700 }
@@ -243,9 +210,6 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .equipe-n { font-size: 1.0625rem; font-weight: 700; min-width: 0; overflow-wrap: anywhere }
 .liens { display: flex; flex-direction: column; align-items: center; gap: 8px }
 .indispo-why { display: flex; flex-direction: column; gap: 4px; background: var(--bg); border-radius: 16px; padding: 14px 16px; font-size: 1.0625rem; font-weight: 700 }
-.themes { display: flex; flex-direction: column; gap: 8px }
-.themes > span { font-size: 0.875rem; font-weight: 600; color: var(--muted) }
-.themes .chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
 .cta.alt { background: var(--bg); color: var(--ink); border: 1px solid var(--line); font-size: 1.0625rem; min-height: 56px }
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */
@@ -311,9 +275,9 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .cal-dow { font-size: 0.75rem; font-weight: 700; color: var(--muted); padding: 4px 0 }
 .cal-d { width: 100%; max-width: 44px; aspect-ratio: 1; padding: 0; border-radius: 50%; border: 0; background: none; color: var(--ink); font: inherit; font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer }
 .cal-d.auj { box-shadow: inset 0 0 0 2px var(--line); font-weight: 800 }
-.cal-d.sel { background: var(--nuit); color: var(--on-nuit); box-shadow: none }
+.cal-d.sel { background: var(--ink); color: var(--surface); box-shadow: none }
 .cal-btn { flex: 1 1 0; white-space: nowrap; min-height: 44px; padding: 0 8px; border: 0; border-radius: 999px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.875rem; font-weight: 700; cursor: pointer }
-.cal-btn.fermer { background: var(--nuit); color: var(--on-nuit) }
+.cal-btn.fermer { background: var(--ink); color: var(--surface) }
 .cal-d:disabled { color: var(--faint); cursor: default }
 .cal-ft { display: flex; gap: 6px; padding: 12px 0 4px; border-top: 1px solid var(--line); margin-top: 8px }
 @media (prefers-reduced-motion: no-preference) { .cal { animation: up 180ms var(--ease) } .cal-scrim { animation: fade 180ms var(--ease) } }
@@ -381,7 +345,7 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 .cal-mois { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px 4px }
 .cal-m { min-height: 52px; border: 0; border-radius: 14px; background: var(--bg); color: var(--ink); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer }
 .cal-m::first-letter { text-transform: uppercase }
-.cal-m.sel { background: var(--nuit); color: var(--on-nuit) }
+.cal-m.sel { background: var(--ink); color: var(--surface) }
 .cal-m:disabled { color: var(--faint); cursor: default }
 .tout-histo { margin-top: -4px; min-height: 40px; font-size: 0.875rem }
 /* Fiche d'une voiture dehors : tout doit tenir sur l'écran, sans défiler */
