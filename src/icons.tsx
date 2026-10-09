@@ -72,6 +72,11 @@ export const Home = () => (
     <path d="M9 20v-6h6v6" />
   </S>
 )
+export const Trash = () => (
+  <S sm>
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+  </S>
+)
 export const Wrench = () => (
   <S>
     <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z" />

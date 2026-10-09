@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Vehicule } from '../shared/types'
-import { Check } from './icons'
+import { Check, Trash, Wrench } from './icons'
 import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { PlateInput } from './PlateInput'
 
@@ -77,29 +77,37 @@ export function VehiculeSheet({ v, onClose, onSave, onRetirer, onIndispo }: Prop
             <div className="err" role="alert">
               {errPlaque}
             </div>
+            {v && !onRetirer && <p className="auto">Elle est prêtée en ce moment : tu pourras la retirer une fois rendue.</p>}
+            {/* Les gestes rares, côte à côte au-dessus ; « Enregistrer » reste seul tout en bas, près du pouce */}
+            {(onIndispo || onRetirer) && (
+              <div className="duo">
+                {onIndispo && (
+                  <button type="button" className="opt" onClick={onIndispo}>
+                    <Wrench />
+                    Mettre de côté
+                  </button>
+                )}
+                {onRetirer && (
+                  <button
+                    type="button"
+                    className={'opt danger' + (sure ? ' sure' : '')}
+                    onClick={() => {
+                      if (!sure) return setSure(true)
+                      onRetirer()
+                      close()
+                    }}
+                  >
+                    <Trash />
+                    {sure ? 'Confirmer' : 'Retirer du parc'}
+                  </button>
+                )}
+              </div>
+            )}
+            {sure && <p className="auto">Touche encore « Confirmer » pour la retirer. Ses anciens prêts restent dans l'historique.</p>}
             <button className="cta" type="submit">
               <Check />
               {v ? 'Enregistrer' : 'Ajouter la voiture'}
             </button>
-            {v && !onRetirer && <p className="auto">Elle est prêtée en ce moment : tu pourras la retirer une fois rendue.</p>}
-            {onIndispo && (
-              <button type="button" className="link" onClick={onIndispo}>
-                Mettre de côté (CT, réparation…)
-              </button>
-            )}
-            {onRetirer && (
-              <button
-                type="button"
-                className="link danger"
-                onClick={() => {
-                  if (!sure) return setSure(true)
-                  onRetirer()
-                  close()
-                }}
-              >
-                {sure ? 'Touche encore pour confirmer' : 'Retirer cette voiture du parc'}
-              </button>
-            )}
           </form>
         </>
       )}
