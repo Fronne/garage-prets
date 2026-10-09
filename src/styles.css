@@ -12,6 +12,8 @@
   --eu: #2563eb; --on-eu: #ffffff; --focus: #2563eb;
   --f: 'Plus Jakarta Sans Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fd: var(--f); /* titres */
+  --plate-line: #d1d5db; --plate-ink: #0f172a; --dash: #d1d5db; --faint: #c4c8d0; --late-line: #fecdd3;
+  --scrim-soft: rgba(17, 24, 39, 0.35); --shadow-sheet: rgba(15, 23, 42, 0.18); --shadow-pop: rgba(15, 23, 42, 0.25); --focus-soft: rgba(17, 24, 39, 0.08);
   --t: 200ms; --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 /* Style « Atelier » : charte Canal Mhirsi Service (bleu nuit, orange atelier, gris acier, titres en Archivo).
@@ -22,6 +24,9 @@
   --shadow-up: 0 2px 6px rgba(15, 42, 68, 0.07), 0 12px 28px rgba(15, 42, 68, 0.1);
   --out: #a8520a; --out-mid: #f28c28; --out-bg: #fdebd8;
   --cta: #0f2a44; --eu: #003399; --focus: #a8520a;
+  --ok-bg: #e6f6ef; --late-soft: #fdecef;
+  --plate-line: #dde3ea; --plate-ink: #0f2a44; --dash: #c5cfda; --faint: #b5c0cc; --late-line: #f9c9d3;
+  --scrim-soft: rgba(15, 42, 68, 0.35); --shadow-sheet: rgba(15, 42, 68, 0.18); --shadow-pop: rgba(15, 42, 68, 0.25); --focus-soft: rgba(15, 42, 68, 0.1);
   --fd: 'Archivo', 'Arial Black', system-ui, sans-serif;
 }
 /* Atelier : appeler est une action, pas un état : bouton bleu nuit, téléphone blanc (le vert reste pour « disponible ») */
@@ -59,7 +64,7 @@ button.count:active { transform: scale(0.94) }
 .offline { font-size: 0.8125rem; font-weight: 600; color: var(--out) }
 
 /* Plaque d'immatriculation */
-.plate { align-self: flex-start; display: inline-flex; align-items: stretch; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; color: #0f172a; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1; overflow: hidden; font-variant-numeric: tabular-nums; white-space: nowrap }
+.plate { align-self: flex-start; display: inline-flex; align-items: stretch; border: 1px solid var(--plate-line); border-radius: 4px; background: #fff; color: var(--plate-ink); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; line-height: 1; overflow: hidden; font-variant-numeric: tabular-nums; white-space: nowrap }
 .plate i { background: var(--eu); color: var(--on-eu); font-style: normal; font-size: 0.5625rem; padding: 4px 3px; display: flex; align-items: flex-end }
 .plate span { padding: 4px 6px }
 
@@ -84,18 +89,18 @@ svg.i.app { stroke-width: 1.2 } /* la voiture de l'icône remplit tout le carré
 .tile .who svg, .tile .since svg { width: 15px; height: 15px; flex: none; stroke-width: 1.8; color: var(--muted) }
 .t-ok .ico, .t-ok .st { background: var(--ok-bg); color: var(--ok) } .t-ok .who { color: var(--muted); font-weight: 500 }
 .t-out .ico, .t-out .st { background: var(--out-bg); color: var(--out) }
-.t-late { border-color: #fecdd3 }
+.t-late { border-color: var(--late-line) }
 .t-late .st::before { display: none }
 .t-late .ico, .t-late .st { background: var(--late-soft); color: var(--late) }
 .t-late .since, .t-late .since svg { color: var(--late); font-weight: 600 }
-.tile.add { min-height: 4.5rem; border: 1.5px dashed #d1d5db; background: transparent; box-shadow: none; color: var(--muted); align-items: center; justify-content: center; flex-direction: row; gap: 8px; font-weight: 600 }
+.tile.add { min-height: 4.5rem; border: 1.5px dashed var(--dash); background: transparent; box-shadow: none; color: var(--muted); align-items: center; justify-content: center; flex-direction: row; gap: 8px; font-weight: 600 }
 .tile.add svg { width: 18px; height: 18px }
 .grid .tile.add:only-child { grid-column: 1 / -1 }
 @media (max-width: 320px) { .grid { grid-template-columns: 1fr } }
 
 /* Feuilles (fenêtres qui montent du bas) */
 .scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 10; display: flex; align-items: flex-end; justify-content: center }
-.sheet { background: var(--surface); box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.18); width: 100%; max-width: 37.5rem; max-height: 94%; overflow: auto; border-radius: 20px 20px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px }
+.sheet { background: var(--surface); box-shadow: 0 -8px 30px var(--shadow-sheet); width: 100%; max-width: 37.5rem; max-height: 94%; overflow: auto; border-radius: 20px 20px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 16px }
 .grab { width: 44px; height: 5px; border-radius: 999px; background: var(--line); align-self: center }
 .shead { display: flex; gap: 16px; align-items: flex-start }
 .shead-t { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0 }
@@ -110,7 +115,7 @@ label.q { font-size: 1.25rem; font-weight: 800 }
 .inp.sm { min-height: 50px; font-size: 1.0625rem; border-color: var(--line) }
 .inp.sm:focus { border-color: var(--ink) }
 /* Champ sélectionné : bord foncé et halo gris léger, sans le cadre bleu du téléphone */
-input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(17, 24, 39, 0.08) }
+input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--focus-soft) }
 .chips { display: flex; flex-wrap: wrap; gap: 8px }
 .chip { min-height: 44px; padding: 0 16px; border-radius: 999px; font-size: 1rem; font-weight: 600; cursor: pointer; border: 2px solid var(--line); background: var(--surface) }
 .chip[aria-pressed='true'] { border-color: var(--ink); background: var(--ink); color: var(--surface) }
@@ -202,7 +207,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 .plate-in { display: flex; align-items: center; gap: 6px }
 .plate-in .eu { flex: none; align-self: stretch; display: flex; align-items: flex-end; justify-content: center; width: 28px; padding-bottom: 8px; border-radius: 8px; background: var(--eu); color: var(--on-eu); font-weight: 700; font-size: 0.8125rem }
 .plate-box { min-width: 0; flex: 1; font-size: 1.25rem; text-align: center; padding: 0 4px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; font-variant-numeric: tabular-nums }
-.plate-box::placeholder { color: #c4c8cf; font-weight: 600 }
+.plate-box::placeholder { color: var(--faint); font-weight: 600 }
 
 /* Fenêtre « Sur ce téléphone » */
 .moi { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 0 4px; text-align: center }
@@ -215,8 +220,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 
 /* Glisser la fenêtre vers le bas, et la demande « Enregistrer les modifications ? » */
 .sheet { touch-action: pan-y }
-.ask-scrim { position: fixed; inset: 0; z-index: 11; background: rgba(17, 24, 39, 0.35); display: flex; align-items: flex-end; justify-content: center; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) }
-.ask { width: 100%; max-width: 26rem; background: var(--surface); border-radius: 20px; padding: 20px 16px 8px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25) }
+.ask-scrim { position: fixed; inset: 0; z-index: 11; background: var(--scrim-soft); display: flex; align-items: flex-end; justify-content: center; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)) }
+.ask { width: 100%; max-width: 26rem; background: var(--surface); border-radius: 20px; padding: 20px 16px 8px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 12px 40px var(--shadow-pop) }
 .ask h3 { margin: 0 0 6px; font-size: 1.25rem; font-weight: 800; text-align: center }
 .ask .cta { min-height: 56px; font-size: 1.0625rem }
 .cta.alt.danger { color: var(--late) }
@@ -264,8 +269,8 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 .date-btn.set { color: var(--ink); font-weight: 600 }
 .date-btn span::first-letter { text-transform: uppercase }
 .finder-row .date-btn { flex: 1 }
-.cal-scrim { position: fixed; inset: 0; z-index: 30; background: rgba(17, 24, 39, 0.35); display: flex; align-items: flex-end; justify-content: center; padding: 12px 12px calc(16px + env(safe-area-inset-bottom, 0px)) }
-.cal { width: 100%; max-width: 24rem; box-sizing: border-box; background: var(--surface); border-radius: 24px; padding: 16px 10px 10px; box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25) }
+.cal-scrim { position: fixed; inset: 0; z-index: 30; background: var(--scrim-soft); display: flex; align-items: flex-end; justify-content: center; padding: 12px 12px calc(16px + env(safe-area-inset-bottom, 0px)) }
+.cal { width: 100%; max-width: 24rem; box-sizing: border-box; background: var(--surface); border-radius: 24px; padding: 16px 10px 10px; box-shadow: 0 12px 40px var(--shadow-pop) }
 .cal-hd { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 8px }
 .cal-t { font-size: 1.125rem; font-weight: 800 }
 .cal-t::first-letter { text-transform: uppercase }
@@ -278,7 +283,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px r
 .cal-d.sel { background: var(--ink); color: var(--surface); box-shadow: none }
 .cal-btn { flex: 1 1 0; white-space: nowrap; min-height: 44px; padding: 0 8px; border: 0; border-radius: 999px; background: var(--bg); color: var(--ink); font: inherit; font-size: 0.875rem; font-weight: 700; cursor: pointer }
 .cal-btn.fermer { background: var(--ink); color: var(--surface) }
-.cal-d:disabled { color: #c4c8d0; cursor: default }
+.cal-d:disabled { color: var(--faint); cursor: default }
 .cal-ft { display: flex; gap: 6px; padding: 12px 0 4px; border-top: 1px solid var(--line); margin-top: 8px }
 @media (prefers-reduced-motion: no-preference) { .cal { animation: up 180ms var(--ease) } .cal-scrim { animation: fade 180ms var(--ease) } }
 /* Fenêtre longue : elle défile au lieu d'écraser son contenu (la plaque était tassée) */
@@ -346,7 +351,7 @@ input, textarea, [contenteditable] { -webkit-user-select: text; user-select: tex
 .cal-m { min-height: 52px; border: 0; border-radius: 14px; background: var(--bg); color: var(--ink); font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer }
 .cal-m::first-letter { text-transform: uppercase }
 .cal-m.sel { background: var(--ink); color: var(--surface) }
-.cal-m:disabled { color: #c4c8d0; cursor: default }
+.cal-m:disabled { color: var(--faint); cursor: default }
 .tout-histo { margin-top: -4px; min-height: 40px; font-size: 0.875rem }
 /* Fiche d'une voiture dehors : tout doit tenir sur l'écran, sans défiler */
 .kv.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px }
