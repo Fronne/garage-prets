@@ -12,7 +12,7 @@ import { MoiSheet } from './MoiSheet'
 import { EquipeSheet } from './EquipeSheet'
 import { enAttente, envoyer, vider } from './envois'
 import { AppIcon, Clock } from './icons'
-import { Historique, chercherDansHistorique } from './Historique'
+import { Historique, chercherDansHistorique, prechargerHistorique } from './Historique'
 
 const CACHE_KEY = 'garage.cache'
 const POLL_MS = 15_000
@@ -141,9 +141,12 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     document.addEventListener('visibilitychange', onVis)
     window.addEventListener('online', sync)
     const f = setTimeout(() => setFirst(false), 600)
+    // L'Historique se prépare en arrière-plan, une fois l'écran des prêts affiché
+    const h = setTimeout(prechargerHistorique, 2000)
     return () => {
       clearInterval(t)
       clearTimeout(f)
+      clearTimeout(h)
       document.removeEventListener('visibilitychange', onVis)
       window.removeEventListener('online', sync)
     }

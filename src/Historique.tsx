@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { LigneHisto } from '../shared/types'
 import { api, errorText } from './api'
 import { Avatar } from './Board'
@@ -24,36 +24,74 @@ export function chercherDansHistorique(q: string) {
   memo.q = q
 }
 
+// Dernière réponse pour chaque recherche : la page s'affiche tout de suite avec, puis se met à jour en arrière-plan
+const cache = new Map<string, LigneHisto[]>()
+// Fiches dessinées d'un coup ; les suivantes arrivent quand on approche du bas (300 fiches d'un coup font ramer le téléphone)
+const PAGE = 30
+
+function params(jour: string, q: string) {
+  const p = new URLSearchParams()
+  if (jour) {
+    p.set('de', new Date(jour + 'T00:00').toISOString())
+    p.set('a', new Date(jour + 'T23:59:59.999').toISOString())
+  }
+  if (q.trim()) p.set('q', q.trim())
+  return p.toString()
+}
+
+async function charger(jour: string, q: string) {
+  const k = params(jour, q)
+  const r = await api<LigneHisto[]>('/historique?' + k)
+  cache.set(k, r)
+  return r
+}
+
+// Appelé peu après l'ouverture de l'appli : le premier passage sur l'Historique est déjà prêt
+export const prechargerHistorique = () => charger('', '').catch(() => {})
+
 // Tous les prêts passés : on choisit un jour (celui du PV) et/ou on tape une plaque pour savoir qui avait la voiture
 export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
   const [jour, setJourRaw] = useState(memo.jour)
   const [q, setQRaw] = useState(memo.q)
   const setJour = (v: string) => setJourRaw((memo.jour = v))
   const setQ = (v: string) => setQRaw((memo.q = v))
-  const [rows, setRows] = useState<LigneHisto[] | null>(null)
+  const [rows, setRows] = useState<LigneHisto[] | null>(() => cache.get(params(memo.jour, memo.q)) ?? null)
   const [err, setErr] = useState('')
+  const [n, setN] = useState(PAGE)
+  const finRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
     let stale = false
-    const t = setTimeout(async () => {
-      const params = new URLSearchParams()
-      if (jour) {
-        params.set('de', new Date(jour + 'T00:00').toISOString())
-        params.set('a', new Date(jour + 'T23:59:59.999').toISOString())
-      }
-      if (q.trim()) params.set('q', q.trim())
-      try {
-        const r = await api<LigneHisto[]>('/historique?' + params)
-        if (!stale) (setRows(r), setErr(''))
-      } catch (e) {
-        if (!stale) setErr(errorText(e))
-      }
-    }, 250)
+    const deja = cache.get(params(jour, q))
+    if (deja) setRows(deja)
+    setN(PAGE)
+    // Pendant la frappe, on attend un peu ; sans texte tapé (ouverture, choix d'un jour), on charge tout de suite
+    const t = setTimeout(
+      async () => {
+        try {
+          const r = await charger(jour, q)
+          if (!stale) (setRows(r), setErr(''))
+        } catch (e) {
+          if (!stale) setErr(errorText(e))
+        }
+      },
+      q.trim() ? 250 : 0,
+    )
     return () => {
       stale = true
       clearTimeout(t)
     }
   }, [jour, q])
+
+  // Près du bas de la liste : on dessine les fiches suivantes
+  const reste = rows ? rows.length > n : false
+  useEffect(() => {
+    const el = finRef.current
+    if (!el || !reste || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && setN((x) => x + PAGE), { rootMargin: '800px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [reste, n])
 
   const titreJour = jour && new Date(jour + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   let dernierMois = ''
@@ -114,7 +152,7 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
       )}
       {rows && rows.length > 0 && (
         <ul className="histo">
-          {rows.map((r) => {
+          {rows.slice(0, n).map((r) => {
             const m = mois(r.depart)
             const titre = !jour && m !== dernierMois ? (dernierMois = m) : null
             return (
@@ -164,6 +202,13 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
               </li>
             )
           })}
+          {reste && (
+            <li ref={finRef}>
+              <button type="button" className="link plus" onClick={() => setN((x) => x + PAGE)}>
+                Voir les prêts suivants
+              </button>
+            </li>
+          )}
         </ul>
       )}
     </main>

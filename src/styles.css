@@ -243,6 +243,7 @@ input:focus-visible, .inp:focus-visible { outline: none; box-shadow: 0 0 0 4px v
 .histo-res { margin: 0; color: var(--slate); font-weight: 600 }
 .histo-res::first-letter { text-transform: uppercase }
 .histo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px }
+.histo .plus { display: block; margin: 0 auto }
 .mois { margin: 12px 0 4px; font-size: 0.8125rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em }
 .h-card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow) }
 .h-top { display: flex; align-items: center; gap: 12px }
