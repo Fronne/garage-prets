@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SyntheticEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type SyntheticEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { JeuPhotos, PhotoCle, PhotosPret } from '../shared/types'
 import { ApiError, errorText, photoUrl } from './api'
@@ -62,17 +62,29 @@ export async function prendrePhoto(file: File, onErreur: (msg: string) => void):
   return id
 }
 
-type Vue = { label: string; id: string }[]
+// Toutes les photos de la fiche, et celle touchée pour ouvrir
+type Vue = { photos: { label: string; id: string }[]; i: number }
 
-// Une photo en grand. Toucher ferme.
+// Les photos en grand, une à la fois : glisser à gauche ou à droite passe à la suivante. Toucher ferme.
 function Visionneuse({ vue, onClose }: { vue: Vue; onClose: () => void }) {
   const fermer = useRef(onClose)
   fermer.current = onClose
+  const defile = useRef<HTMLDivElement>(null)
+  // Ouvre sur la photo touchée
+  useLayoutEffect(() => {
+    const el = defile.current
+    if (el) el.scrollLeft = vue.i * el.clientWidth
+  }, [])
   useEffect(() => {
     // Une étape dans l'historique du téléphone : le geste retour ferme la photo, pas la fenêtre derrière
     history.pushState({ ...history.state, vue: true }, '')
     const onPop = () => fermer.current()
     const onKey = (e: KeyboardEvent) => {
+      const el = defile.current
+      if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && el) {
+        e.stopImmediatePropagation()
+        el.scrollBy({ left: (e.key === 'ArrowRight' ? 1 : -1) * el.clientWidth, behavior: 'smooth' })
+      }
       if (e.key !== 'Escape') return
       e.stopImmediatePropagation()
       history.back()
@@ -98,12 +110,17 @@ function Visionneuse({ vue, onClose }: { vue: Vue; onClose: () => void }) {
       onTouchEnd={stop}
       onTouchCancel={stop}
     >
-      {vue.map((x) => (
-        <figure key={x.id}>
-          <ImgPhoto id={x.id} alt={x.label} />
-          <figcaption>{x.label}</figcaption>
-        </figure>
-      ))}
+      <div className="vue-defile" ref={defile}>
+        {vue.photos.map((x, n) => (
+          <figure key={x.id}>
+            <ImgPhoto id={x.id} alt={x.label} />
+            <figcaption>
+              {x.label}
+              {vue.photos.length > 1 && ` · ${n + 1} / ${vue.photos.length}`}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
       <button className="x" aria-label="Fermer">
         <X />
       </button>
@@ -196,7 +213,10 @@ export function GrillePhotos({ cles, jeu, onChange, onErreur }: GrilleProps) {
             const { [k]: _, ...reste } = dernier.current
             onChange(reste)
           }}
-          onVoir={() => setVue([{ label, id: jeu[k]! }])}
+          onVoir={() => {
+            const prises = cles.filter(([c]) => jeu[c])
+            setVue({ photos: prises.map(([c, l]) => ({ label: l, id: jeu[c]! })), i: prises.findIndex(([c]) => c === k) })
+          }}
         />
       ))}
       {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
@@ -216,21 +236,24 @@ export function VoirPhotos({ photos, partie }: VoirProps) {
   const dep = photos?.depart ?? {}
   const permis: [PhotoCle, string][] = partie === 'etat' ? [] : PERMIS.filter(([k]) => dep[k]).map(([k, l]) => [k, 'Permis ' + l.toLowerCase()])
   const etat = partie === 'permis' ? [] : ETAT.filter(([k]) => dep[k])
-  const grille = (titre: string, cles: [PhotoCle, string][], jeu: JeuPhotos, suffixe: string) =>
+  // En grand, on passe d'une photo à l'autre parmi toutes celles affichées ici : permis puis voiture
+  const toutes = [...permis, ...etat.map(([k, l]): [PhotoCle, string] => [k, l + ' au départ'])]
+  const ouvrir = (k: PhotoCle) => setVue({ photos: toutes.map(([c, l]) => ({ label: l, id: dep[c]! })), i: toutes.findIndex(([c]) => c === k) })
+  const grille = (titre: string, cles: [PhotoCle, string][]) =>
     cles.length > 0 && (
       <>
         <div className="sub">{titre}</div>
         <div className={'cases' + (cles.length === 2 ? ' deux' : '')}>
           {cles.map(([k, label]) => (
-            <Case key={k} label={label} id={jeu[k]} onVoir={() => setVue([{ label: label + suffixe, id: jeu[k]! }])} />
+            <Case key={k} label={label} id={dep[k]} onVoir={() => ouvrir(k)} />
           ))}
         </div>
       </>
     )
   return (
     <div className="cmp-bloc">
-      {grille('Permis', permis, dep, '')}
-      {grille('Jauge et état au départ', etat, dep, ' au départ')}
+      {grille('Permis', permis)}
+      {grille('Jauge et état au départ', etat)}
       {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
     </div>
   )

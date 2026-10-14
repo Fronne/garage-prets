@@ -383,7 +383,9 @@ html.fige, html.fige body { overflow: hidden }
 .kv .h-photos { padding-right: 0; align-self: flex-end }
 /* Photo en grand : une seule, ou départ et retour l'une sous l'autre */
 .vue { position: fixed; inset: 0; z-index: 30; background: var(--vue); display: flex; flex-direction: column; gap: 12px; padding: calc(60px + env(safe-area-inset-top, 0px)) 8px calc(12px + env(safe-area-inset-bottom, 0px)); cursor: zoom-out; animation: fondu 160ms ease-out }
-.vue figure { margin: 0; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px }
+.vue-defile { flex: 1 1 0; min-height: 0; margin: 0 -8px; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior: contain; scrollbar-width: none }
+.vue-defile::-webkit-scrollbar { display: none }
+.vue figure { margin: 0; flex: 0 0 100%; min-height: 0; padding: 0 8px; box-sizing: border-box; scroll-snap-align: center; scroll-snap-stop: always; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px }
 .vue img { flex: 0 1 auto; min-height: 0; max-width: 100%; object-fit: contain }
 .vue figcaption, .ph-vide { color: var(--on-vue); font-size: 0.875rem; font-weight: 700 }
 .ph-vide { margin: auto }
