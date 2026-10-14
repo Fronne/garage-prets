@@ -40,6 +40,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Photo du compteur prise depuis l'appli -->
+    <!-- Photos du permis et de la voiture prises depuis l'appli -->
     <uses-permission android:name="android.permission.CAMERA" />
 </manifest>

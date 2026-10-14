@@ -37,7 +37,7 @@ export const buzz = () => {
 
 export const telHref = (tel: string) => 'tel:' + tel.replace(/[^\d+]/g, '')
 
-// Photo du compteur réduite avant l'envoi (≈ 150 Ko), pour rester rapide sur le réseau du garage
+// Photo (permis, jauge, état) réduite avant l'envoi (≈ 150 Ko), pour rester rapide sur le réseau du garage
 export async function shrinkPhoto(file: File): Promise<string> {
   const img = await createImageBitmap(file)
   const scale = Math.min(1, 1280 / Math.max(img.width, img.height))

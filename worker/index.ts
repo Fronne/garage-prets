@@ -10,6 +10,11 @@ const HISTORY_DAYS = 120
 // Un prêt enregistré par erreur peut être annulé pendant ce délai
 const UNDO_MS = 15 * 60_000
 const MAX_PHOTO = 1_500_000
+// Après le retour : les photos de la voiture (jauge, vues, dégâts) servent de preuve 30 jours, le permis 1 an (RGPD : pas plus que nécessaire)
+const GARDER_VOITURE_JOURS = 30
+const GARDER_PERMIS_JOURS = 365
+// Une photo envoyée qu'aucun prêt n'utilise (reprise, retirée, prêt annulé ou abandonné) est effacée au bout de 2 jours
+const ORPHELINE_JOURS = 2
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
@@ -33,8 +38,9 @@ const idFrom = (v: unknown) => (typeof v === 'string' && UUID.test(v) ? v : cryp
 const now = () => new Date().toISOString()
 
 // Photos d'un prêt : seulement les emplacements connus, chacun avec l'identifiant d'une photo envoyée
-const CLES_DEPART: PhotoCle[] = ['permis_recto', 'permis_verso', 'jauge', 'avant', 'arriere', 'gauche', 'droite', 'detail']
 const CLES_PERMIS: PhotoCle[] = ['permis_recto', 'permis_verso']
+const CLES_VOITURE: PhotoCle[] = ['jauge', 'avant', 'arriere', 'gauche', 'droite']
+const CLES_DEPART = [...CLES_PERMIS, ...CLES_VOITURE]
 function jeuPhotos(v: unknown, cles: PhotoCle[]): JeuPhotos | undefined {
   if (!v || typeof v !== 'object') return undefined
   const jeu: JeuPhotos = {}
@@ -59,11 +65,6 @@ function jeuDepart(v: unknown): JeuPhotos | undefined {
   if (degats.length) jeu.degats = degats
   return Object.keys(jeu).length ? jeu : undefined
 }
-// Tous les identifiants de photo d'un jeu, emplacements et dégâts
-const idsJeu = (jeu: JeuPhotos | undefined) => [
-  ...Object.entries(jeu ?? {}).flatMap(([k, id]) => (k !== 'degats' && typeof id === 'string' ? [id] : [])),
-  ...(jeu?.degats ?? []).map((d) => d.id),
-]
 const lirePhotos = (s: unknown): PhotosPret | null => {
   try {
     return typeof s === 'string' ? JSON.parse(s) : null
@@ -71,7 +72,7 @@ const lirePhotos = (s: unknown): PhotosPret | null => {
     return null
   }
 }
-const ecrirePhotos = (p: PhotosPret) => (p.depart || p.retour ? JSON.stringify(p) : null)
+const ecrirePhotos = (p: PhotosPret) => (p.depart ? JSON.stringify(p) : null)
 // Heure donnée par le téléphone : un prêt ou un retour noté sans réseau garde son heure réelle. Plus de 14 jours ou dans le futur : on prend l'heure du serveur.
 function heureTel(v: unknown, auPlusTot?: string): string {
   const t = Date.parse(String(v ?? ''))
@@ -153,7 +154,7 @@ app.get('/api/sync', async (c) => {
   const [vehicules, prets] = await Promise.all([
     c.env.DB.prepare('SELECT id, nom, immat, indispo, indispo_le FROM vehicules WHERE archive = 0 ORDER BY nom').all<Vehicule>(),
     c.env.DB.prepare(
-      `SELECT id, vehicule_id, client, tel, note, depart, retour_prevu, retour, photo_depart, photo_retour, par, photos
+      `SELECT id, vehicule_id, client, tel, note, depart, retour_prevu, retour, par, photos
        FROM prets WHERE retour IS NULL OR retour >= ? ORDER BY depart DESC LIMIT 1000`,
     )
       .bind(since)
@@ -280,8 +281,8 @@ app.post('/api/prets', async (c) => {
   if (v.indispo !== null) throw new HttpError(409, 'Cette voiture est indisponible : remets-la disponible avant de la prêter.')
   // ON CONFLICT : un prêt renvoyé deux fois (réseau coupé pendant la réponse) n'est enregistré qu'une fois
   await c.env.DB.prepare(
-    `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, photo_depart, par, photos)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`,
+    `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, par, photos)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`,
   )
     .bind(
       id,
@@ -291,7 +292,6 @@ app.post('/api/prets', async (c) => {
       f.note,
       heureTel(b.depart),
       f.retourPrevu,
-      optText(b.photo_depart, 40),
       c.get('prenom'),
       ecrirePhotos({ depart: jeuDepart(b.photos?.depart) }),
     )
@@ -306,11 +306,10 @@ app.put('/api/prets/:id', async (c) => {
   await c.env.DB.prepare('UPDATE prets SET client = ?, tel = ?, note = ?, retour_prevu = ?, maj_le = ? WHERE id = ?')
     .bind(f.client, f.tel, f.note, f.retourPrevu, now(), id)
     .run()
-  // Photos du départ changées depuis « Modifier le prêt » ; celles du retour restent
+  // Photos changées depuis « Modifier le prêt »
   if (b.photos && typeof b.photos === 'object') {
-    const avant = lirePhotos(await c.env.DB.prepare('SELECT photos FROM prets WHERE id = ?').bind(id).first('photos')) ?? {}
     await c.env.DB.prepare('UPDATE prets SET photos = ? WHERE id = ?')
-      .bind(ecrirePhotos({ ...avant, depart: jeuDepart(b.photos.depart) }), id)
+      .bind(ecrirePhotos({ depart: jeuDepart(b.photos.depart) }), id)
       .run()
   }
   return c.json({ ok: true })
@@ -322,38 +321,8 @@ app.post('/api/prets/:id/retour', async (c) => {
   await c.env.DB.prepare('UPDATE prets SET retour = ?, maj_le = ? WHERE id = ? AND retour IS NULL')
     .bind(heureTel(b.at, depart ?? undefined), now(), c.req.param('id'))
     .run()
-  c.executionCtx.waitUntil(alleger(c.env).catch((e) => console.error(e)))
   return c.json({ ok: true })
 })
-
-// Une fois la voiture rendue, l'Historique ne garde que le permis : les photos de la voiture (jauge, état, compteur) sont effacées
-// pour ne pas remplir la base. On attend un jour après le retour, le temps d'un « Annuler » ou d'un retour noté par erreur.
-async function alleger(env: Env) {
-  const avant = new Date(Date.now() - 86_400_000).toISOString()
-  const voiture = [...CLES_DEPART.filter((k) => !CLES_PERMIS.includes(k)), 'degats']
-  const { results } = await env.DB.prepare(
-    `SELECT id, photos, photo_depart, photo_retour FROM prets
-     WHERE retour IS NOT NULL AND retour < ?
-       AND (photo_depart IS NOT NULL OR photo_retour IS NOT NULL OR photos LIKE '%"retour"%' OR ${voiture.map(() => 'photos LIKE ?').join(' OR ')})
-     LIMIT 50`,
-  )
-    .bind(avant, ...voiture.map((k) => `%"${k}"%`))
-    .all<{ id: string; photos: string | null; photo_depart: string | null; photo_retour: string | null }>()
-  if (!results.length) return
-  const effacer: string[] = []
-  const maj = results.map((r) => {
-    const p = lirePhotos(r.photos) ?? {}
-    const permis = jeuPhotos(p.depart, CLES_PERMIS)
-    const garder = idsJeu(permis)
-    for (const jeu of [p.depart, p.retour]) for (const id of idsJeu(jeu)) if (!garder.includes(id)) effacer.push(id)
-    for (const id of [r.photo_depart, r.photo_retour]) if (id) effacer.push(id)
-    return env.DB.prepare('UPDATE prets SET photos = ?, photo_depart = NULL, photo_retour = NULL WHERE id = ?').bind(
-      permis ? JSON.stringify({ depart: permis }) : null,
-      r.id,
-    )
-  })
-  await env.DB.batch([...maj, ...effacer.map((id) => env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(id))])
-}
 
 // « Annuler » juste après « Voiture rendue »
 app.post('/api/prets/:id/annuler-retour', async (c) => {
@@ -400,4 +369,37 @@ app.all('/api/*', () => {
 
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
 
-export default app
+const ilYa = (jours: number) => new Date(Date.now() - jours * 86_400_000).toISOString()
+
+// Ménage des photos, chaque nuit. Après le retour, les photos de la voiture partent au bout de 30 jours (seul le permis reste),
+// le permis au bout d'1 an. Puis toute photo qu'aucun prêt n'utilise plus est effacée de la base.
+async function menagePhotos(env: Env) {
+  const voiture = [...CLES_VOITURE, 'degats'].map((k) => `json_extract(photos, '$.depart.${k}') IS NOT NULL`).join(' OR ')
+  const finPermis = ilYa(GARDER_PERMIS_JOURS)
+  const { results } = await env.DB.prepare(
+    `SELECT id, retour, photos FROM prets
+     WHERE retour IS NOT NULL AND photos IS NOT NULL AND (retour < ? OR (retour < ? AND (${voiture})))
+     LIMIT 200`,
+  )
+    .bind(finPermis, ilYa(GARDER_VOITURE_JOURS))
+    .all<{ id: string; retour: string; photos: string }>()
+  const maj = results.map((r) => {
+    const permis = r.retour < finPermis ? undefined : jeuPhotos(lirePhotos(r.photos)?.depart, CLES_PERMIS)
+    return env.DB.prepare('UPDATE prets SET photos = ? WHERE id = ?').bind(permis ? JSON.stringify({ depart: permis }) : null, r.id)
+  })
+  await env.DB.batch([
+    ...maj,
+    // Les identifiants sont des UUID : les chercher dans le texte des photos d'un prêt suffit
+    env.DB.prepare(
+      `DELETE FROM photos WHERE cree_le < ?
+       AND NOT EXISTS (SELECT 1 FROM prets WHERE prets.photos IS NOT NULL AND instr(prets.photos, photos.id) > 0)`,
+    ).bind(ilYa(ORPHELINE_JOURS)),
+  ])
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled(_event, env, ctx) {
+    ctx.waitUntil(menagePhotos(env))
+  },
+} satisfies ExportedHandler<Env>

@@ -202,7 +202,7 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                         {aDesPhotos(r.photos) && (
                           <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
                             <Cam />
-                            {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
+                            {/* Voiture rendue depuis plus de 30 jours : il ne reste que le permis (lui-même effacé au bout d'1 an) */}
                             {nbEtat(r.photos?.depart) ? (ouvert === r.id ? 'Cacher les photos' : 'Permis et photos') : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
                           </button>
                         )}

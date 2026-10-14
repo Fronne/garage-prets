@@ -3,6 +3,8 @@
   "main": "worker/index.ts",
   "compatibility_date": "2025-01-01",
   "assets": { "directory": "./dist", "binding": "ASSETS" },
+  // Ménage des photos chaque nuit, vers 3 h (heure de Paris en hiver)
+  "triggers": { "crons": ["0 2 * * *"] },
   "d1_databases": [
     {
       "binding": "DB",

@@ -20,16 +20,14 @@ export interface Pret {
   retour_prevu: string | null
   /** Date et heure ISO du retour ; null tant que la voiture est dehors */
   retour: string | null
-  photo_depart: string | null
-  photo_retour: string | null
   /** Prénom de la personne du garage qui a fait le prêt */
   par: string | null
-  /** Permis du client, jauge et état de la voiture au départ et au retour */
+  /** Permis du client, jauge et état de la voiture, pris au départ */
   photos?: PhotosPret | null
 }
 
-/** Emplacements de photo d'un prêt. Le permis ne se prend qu'au départ. « detail » : ancienne case unique de dégât, remplacée par la liste « degats » */
-export type PhotoCle = 'permis_recto' | 'permis_verso' | 'jauge' | 'avant' | 'arriere' | 'gauche' | 'droite' | 'detail'
+/** Emplacements de photo d'un prêt */
+export type PhotoCle = 'permis_recto' | 'permis_verso' | 'jauge' | 'avant' | 'arriere' | 'gauche' | 'droite'
 /** Un dégât photographié, avec où il est si on l'a noté */
 export interface Degat {
   id: string
@@ -37,9 +35,9 @@ export interface Degat {
 }
 /** Identifiant de la photo (table « photos ») pour chaque emplacement rempli, et les dégâts, autant qu'il en faut */
 export type JeuPhotos = Partial<Record<PhotoCle, string>> & { degats?: Degat[] }
+/** Les photos sont toutes prises au départ ; aucune au retour */
 export interface PhotosPret {
   depart?: JeuPhotos
-  retour?: JeuPhotos
 }
 
 export interface SyncData {
@@ -49,4 +47,4 @@ export interface SyncData {
 }
 
 /** Ligne de l'historique : le prêt avec le nom et la plaque de sa voiture */
-export type LigneHisto = Omit<Pret, 'photo_depart' | 'photo_retour'> & { nom: string; immat: string | null }
+export type LigneHisto = Pret & { nom: string; immat: string | null }

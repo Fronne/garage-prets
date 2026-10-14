@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { JeuPhotos, Pret, Vehicule } from '../shared/types'
 import { AppIcon, Cal, Cam, Check, IdCard, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
-import { ETAT, GrilleDegats, GrillePhotos, PERMIS, nbPhotos, resumeEtat, versDegats } from './Photos'
+import { ETAT, GrilleDegats, GrillePhotos, PERMIS, nbPhotos, resumeEtat } from './Photos'
 import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { dayStr, fmtS } from './util'
 
@@ -11,7 +11,6 @@ export type Draft = {
   retour: string
   tel: string
   note: string
-  photo: string | null
   /** Permis, jauge et état de la voiture au départ */
   photos: JeuPhotos
   open: 'retour' | 'tel' | 'note' | 'permis' | 'photos' | null
@@ -22,8 +21,7 @@ export const emptyDraft = (p?: Pret): Draft => ({
   retour: p?.retour_prevu ?? '',
   tel: p?.tel ?? '',
   note: p?.note ?? '',
-  photo: p?.photo_depart ?? null,
-  photos: versDegats({ ...p?.photos?.depart }),
+  photos: { ...p?.photos?.depart },
   open: null,
 })
 
@@ -80,7 +78,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
   // Modifié par rapport au prêt d'origine (ou, pour un nouveau prêt, quelque chose de rempli)
   const base = emptyDraft(pret)
   const dirty =
-    (['client', 'retour', 'tel', 'note', 'photo'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? '')) ||
+    (['client', 'retour', 'tel', 'note'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? '')) ||
     JSON.stringify(d.photos) !== JSON.stringify(base.photos)
   const nPermis = nbPhotos(d.photos, PERMIS)
   const etat = resumeEtat(d.photos)

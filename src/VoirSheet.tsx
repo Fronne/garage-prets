@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
-import { photoUrl } from './api'
 import { Cam, Check, IdCard, Pen, Phone, Plate, Warn } from './icons'
-import { PERMIS, VoirPhotos, nbEtat, nbPhotos, resumeEtat } from './Photos'
+import { JaugeDepart, PERMIS, VoirPhotos, nbEtat, nbPhotos, resumeEtat } from './Photos'
 import { Sheet, SheetHead } from './Sheet'
 import { days, depuis, fmt, fmtS, isLate, telHref } from './util'
 
@@ -19,21 +18,10 @@ type Props = {
 // Fiche d'une voiture dehors : chez qui, depuis quand, et le bouton « Voiture rendue »
 export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistorique }: Props) {
   const late = isLate(p)
-  const [photo, setPhoto] = useState<string | null>(null)
   const [ouvert, setOuvert] = useState<'permis' | 'etat' | null>(null)
   const nPermis = nbPhotos(p.photos?.depart, PERMIS)
   const nEtat = nbEtat(p.photos?.depart)
-
-  useEffect(() => {
-    if (!p.photo_depart) return
-    let url: string | null = null
-    photoUrl(p.photo_depart)
-      .then((u) => setPhoto((url = u)))
-      .catch(() => {})
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [p.photo_depart])
+  const jauge = p.photos?.depart?.jauge
 
   return (
     <Sheet onClose={onClose}>
@@ -91,7 +79,6 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
               </div>
             )}
           </div>
-          {photo && <img className="photo" src={photo} alt="Compteur au départ" />}
           {/* Photos prises au départ, à regarder au retour : permis du client, jauge et état de la voiture */}
           {nPermis + nEtat > 0 && (
             <div className="opts" role="group" aria-label="Photos du départ">
@@ -137,6 +124,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
               </button>
             </>
           )}
+          {jauge && <JaugeDepart id={jauge} />}
           <button
             className="cta"
             onClick={() => {

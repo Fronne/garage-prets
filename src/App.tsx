@@ -264,8 +264,6 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       depart: new Date().toISOString(),
       retour_prevu: d.retour || null,
       retour: null,
-      photo_depart: d.photo,
-      photo_retour: null,
       par: data!.moi,
       photos: Object.keys(d.photos).length ? { depart: d.photos } : null,
     }
@@ -283,7 +281,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       tel: d.tel.trim() || null,
       note: d.note.trim() || null,
       retour_prevu: d.retour || null,
-      photos: { ...p.photos, depart: d.photos },
+      photos: { depart: d.photos },
     }
     change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, ...patch } : x))), () => envoyer('/prets/' + p.id, 'PUT', patch), { msg: 'Prêt modifié' })
   }

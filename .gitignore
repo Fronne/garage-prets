@@ -11,3 +11,4 @@ android/keystore.properties
 android/keystore/
 *.apk
 android/cle-appli.txt
+*.tsbuildinfo

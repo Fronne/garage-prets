@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type SyntheticEvent } fro
 import { createPortal } from 'react-dom'
 import type { Degat, JeuPhotos, PhotoCle, PhotosPret } from '../shared/types'
 import { ApiError, errorText, photoUrl } from './api'
-import { envoyer } from './envois'
+import { envoyerPhoto, photoEnAttente, quandPhotoPartie } from './envois'
 import { Cam, X } from './icons'
 import { shrinkPhoto } from './util'
 
@@ -20,61 +20,73 @@ export const ETAT: [PhotoCle, string][] = [
 export const MAX_DEGATS = 10
 
 export const nbPhotos = (jeu: JeuPhotos | undefined, cles: [PhotoCle, string][]) => cles.filter(([k]) => jeu?.[k]).length
-/** Les dégâts d'un prêt ; l'ancienne case unique « Détail, dégât » compte comme le premier */
-export const degatsDe = (jeu: JeuPhotos | undefined): Degat[] => [...(jeu?.detail ? [{ id: jeu.detail }] : []), ...(jeu?.degats ?? [])]
 /** Photos de la voiture : les vues prises et les dégâts */
-export const nbEtat = (jeu: JeuPhotos | undefined) => nbPhotos(jeu, ETAT) + degatsDe(jeu).length
+export const nbEtat = (jeu: JeuPhotos | undefined) => nbPhotos(jeu, ETAT) + (jeu?.degats?.length ?? 0)
 /** « 3/5 · 2 dégâts » : les vues prises sur les 5, pour voir ce qui manque ; vide s'il n'y a rien */
 export function resumeEtat(jeu: JeuPhotos | undefined) {
   if (!nbEtat(jeu)) return ''
-  const d = degatsDe(jeu).length
+  const d = jeu?.degats?.length ?? 0
   return `${nbPhotos(jeu, ETAT)}/${ETAT.length}` + (d ? ` · ${d} dégât${d > 1 ? 's' : ''}` : '')
-}
-/** Pour modifier un prêt : l'ancienne case « detail » rejoint la liste des dégâts */
-export function versDegats(jeu: JeuPhotos): JeuPhotos {
-  if (!jeu.detail) return jeu
-  const { detail: _, ...reste } = jeu
-  return { ...reste, degats: degatsDe(jeu) }
 }
 export const aDesPhotos = (p: PhotosPret | null | undefined) => !!p && nbPhotos(p.depart, PERMIS) + nbEtat(p.depart) > 0
 
-// Photos prises sur ce téléphone : affichées tout de suite, sans attendre leur envoi
+// Photos prises sur ce téléphone : affichées tout de suite, gardées en mémoire jusqu'à leur arrivée sur le serveur
 const locales = new Map<string, string>()
-// Photos déjà chargées depuis le serveur, gardées tant que l'appli est ouverte
+quandPhotoPartie((id) => locales.delete(id))
+// Dernières photos affichées, pour les remontrer sans les recharger ; au-delà, les plus anciennes libèrent la mémoire
+const MAX_CHARGEES = 40
 const chargees = new Map<string, Promise<string>>()
 
+function charger(id: string): Promise<string> {
+  const l = locales.get(id)
+  if (l) return Promise.resolve(l)
+  let pr = chargees.get(id)
+  if (pr) chargees.delete(id) // remise en tête : c'est la plus récente
+  // Pas encore envoyée (prise sans réseau, appli rouverte depuis) : elle attend sur le téléphone. Sinon, le serveur.
+  else pr = photoEnAttente(id).then((d) => d ?? photoUrl(id))
+  const p = pr
+  chargees.set(id, p)
+  // Échec (pas de réseau, photo effacée) : on réessaiera au prochain affichage
+  p.catch(() => chargees.get(id) === p && chargees.delete(id))
+  for (const [vieux, v] of chargees) {
+    if (chargees.size <= MAX_CHARGEES) break
+    chargees.delete(vieux)
+    v.then((u) => u.startsWith('blob:') && URL.revokeObjectURL(u), () => {})
+  }
+  return p
+}
+
+/** L'adresse de l'image, ou pourquoi elle manque : « absente » (effacée ou jamais arrivée), « reseau » (pas chargée) */
 function usePhoto(id: string | undefined) {
-  const [url, setUrl] = useState(() => (id ? locales.get(id) ?? null : null))
+  const [etat, setEtat] = useState<{ url: string | null; manque?: 'absente' | 'reseau' }>(() => ({ url: id ? locales.get(id) ?? null : null }))
   useEffect(() => {
-    if (!id) return setUrl(null)
-    const l = locales.get(id)
-    if (l) return setUrl(l)
+    if (!id) return setEtat({ url: null })
     let stale = false
-    if (!chargees.has(id)) {
-      const pr = photoUrl(id)
-      // Pas encore arrivée sur le serveur (envoi en attente) : on réessaiera au prochain affichage
-      pr.catch(() => chargees.delete(id))
-      chargees.set(id, pr)
-    }
-    chargees
-      .get(id)!
-      .then((u) => !stale && setUrl(u))
-      .catch(() => !stale && setUrl(null))
+    charger(id).then(
+      (url) => !stale && setEtat({ url }),
+      (e) => !stale && setEtat({ url: null, manque: e instanceof ApiError && e.status === 404 ? 'absente' : 'reseau' }),
+    )
     return () => {
       stale = true
     }
   }, [id])
-  return url
+  return etat
 }
 
-/** Réduit la photo, l'affiche tout de suite et l'envoie ; sans réseau, l'envoi attend sur le téléphone comme un prêt. */
-export async function prendrePhoto(file: File, onErreur: (msg: string) => void): Promise<string> {
+/** Réduit la photo, l'affiche tout de suite et l'envoie ; sans réseau, l'envoi attend sur le téléphone comme un prêt.
+ * Si elle ne peut pas être gardée (refusée par le serveur, plus de place), onRefusee la retire de sa case. */
+export async function prendrePhoto(file: File, onErreur: (msg: string) => void, onRefusee: (id: string) => void): Promise<string> {
   const data = await shrinkPhoto(file)
   const id = crypto.randomUUID()
   locales.set(id, data)
-  envoyer('/photos', 'POST', { id, data }).catch((e) =>
-    onErreur(e instanceof ApiError ? errorText(e) : 'Pas de réseau et plus de place sur le téléphone pour garder la photo.'),
-  )
+  envoyerPhoto(id, data).catch((e) => {
+    locales.delete(id)
+    onRefusee(id)
+    onErreur(
+      (e instanceof ApiError ? 'Photo refusée : ' + errorText(e).toLowerCase() : 'Pas de réseau et plus de place sur le téléphone pour garder la photo.') +
+        ' Reprends-la.',
+    )
+  })
   return id
 }
 
@@ -145,9 +157,11 @@ function Visionneuse({ vue, onClose }: { vue: Vue; onClose: () => void }) {
   )
 }
 
+const MANQUE = { absente: 'Photo plus disponible', reseau: 'Photo pas chargée : pas de réseau' }
+
 function ImgPhoto({ id, alt }: { id: string; alt: string }) {
-  const url = usePhoto(id)
-  return url ? <img src={url} alt={alt} /> : <span className="ph-vide">Chargement…</span>
+  const { url, manque } = usePhoto(id)
+  return url ? <img src={url} alt={alt} /> : <span className="ph-vide">{manque ? MANQUE[manque] : 'Chargement…'}</span>
 }
 
 type CaseProps = {
@@ -161,7 +175,7 @@ type CaseProps = {
 
 // Un emplacement : vide, on touche pour prendre la photo ; rempli, on touche pour la voir en grand
 function Case({ label, id, onPrendre, onRetirer, onVoir }: CaseProps) {
-  const url = usePhoto(id)
+  const { url, manque } = usePhoto(id)
   const fileRef = useRef<HTMLInputElement>(null)
   if (!id) {
     if (!onPrendre) return <span className="case vide" aria-label={label + ' : pas de photo'} />
@@ -190,6 +204,7 @@ function Case({ label, id, onPrendre, onRetirer, onVoir }: CaseProps) {
     <span className="case pleine">
       <button type="button" className="case-img" onClick={onVoir} aria-label={'Voir ' + label}>
         {url && <img src={url} alt="" />}
+        {manque === 'absente' && <span className="case-info">Plus disponible</span>}
         <span className="case-l">{label}</span>
       </button>
       {onRetirer && (
@@ -221,7 +236,12 @@ export function GrillePhotos({ cles, jeu, onChange, onErreur }: GrilleProps) {
           label={label}
           id={jeu[k]}
           onPrendre={(f) =>
-            prendrePhoto(f, onErreur)
+            prendrePhoto(f, onErreur, (id) => {
+              // Refusée : la case redevient vide, si c'est toujours cette photo-là
+              if (dernier.current[k] !== id) return
+              const { [k]: _, ...reste } = dernier.current
+              onChange(reste)
+            })
               .then((id) => onChange({ ...dernier.current, [k]: id }))
               .catch(() => onErreur("La photo n'a pas pu être lue. Réessaie."))
           }
@@ -296,7 +316,7 @@ export function GrilleDegats({ jeu, onChange, onErreur }: DegatsProps) {
               const f = e.target.files?.[0]
               e.target.value = ''
               if (f)
-                prendrePhoto(f, onErreur)
+                prendrePhoto(f, onErreur, (id) => changer((dernier.current.degats ?? []).filter((x) => x.id !== id)))
                   .then((id) => changer([...(dernier.current.degats ?? []), { id }]))
                   .catch(() => onErreur("La photo n'a pas pu être lue. Réessaie."))
             }}
@@ -321,7 +341,7 @@ export function VoirPhotos({ photos, partie }: VoirProps) {
   type Ph = { label: string; id: string; grand: string }
   const permis: Ph[] = partie === 'etat' ? [] : PERMIS.filter(([k]) => dep[k]).map(([k, l]) => ({ label: l, id: dep[k]!, grand: 'Permis ' + l.toLowerCase() }))
   const etat: Ph[] = partie === 'permis' ? [] : ETAT.filter(([k]) => dep[k]).map(([k, l]) => ({ label: l, id: dep[k]!, grand: l + ' au départ' }))
-  const degats: Ph[] = partie === 'permis' ? [] : degatsDe(dep).map((d, n) => ({ label: labelDegat(d, n), id: d.id, grand: labelDegat(d, n) }))
+  const degats: Ph[] = partie === 'permis' ? [] : (dep.degats ?? []).map((d, n) => ({ label: labelDegat(d, n), id: d.id, grand: labelDegat(d, n) }))
   // En grand, on passe d'une photo à l'autre parmi toutes celles affichées ici : permis, voiture, puis dégâts
   const toutes = [...permis, ...etat, ...degats]
   const ouvrir = (id: string) => setVue({ photos: toutes.map((x) => ({ label: x.grand, id: x.id })), i: toutes.findIndex((x) => x.id === id) })
@@ -343,5 +363,23 @@ export function VoirPhotos({ photos, partie }: VoirProps) {
       {grille('Dégâts au départ', degats)}
       {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
     </div>
+  )
+}
+
+// La jauge du départ, sous les yeux au moment du retour pour comparer. Toucher l'affiche en grand.
+export function JaugeDepart({ id }: { id: string }) {
+  const [vue, setVue] = useState<Vue | null>(null)
+  const { url, manque } = usePhoto(id)
+  return (
+    <>
+      <button type="button" className="jauge-dep" onClick={() => setVue({ photos: [{ label: 'Jauge au départ', id }], i: 0 })}>
+        <span className="jauge-img">{url && <img src={url} alt="" />}</span>
+        <span className="jauge-t">
+          <b>Jauge au départ</b>
+          <span>{manque === 'absente' ? MANQUE.absente : 'À comparer avant de valider le retour'}</span>
+        </span>
+      </button>
+      {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
+    </>
   )
 }
