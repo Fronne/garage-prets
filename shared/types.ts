@@ -24,6 +24,17 @@ export interface Pret {
   photo_retour: string | null
   /** Prénom de la personne du garage qui a fait le prêt */
   par: string | null
+  /** Permis du client, jauge et état de la voiture au départ et au retour */
+  photos?: PhotosPret | null
+}
+
+/** Emplacements de photo d'un prêt. Le permis ne se prend qu'au départ. */
+export type PhotoCle = 'permis_recto' | 'permis_verso' | 'jauge' | 'avant' | 'arriere' | 'gauche' | 'droite' | 'detail'
+/** Identifiant de la photo (table « photos ») pour chaque emplacement rempli */
+export type JeuPhotos = Partial<Record<PhotoCle, string>>
+export interface PhotosPret {
+  depart?: JeuPhotos
+  retour?: JeuPhotos
 }
 
 export interface SyncData {

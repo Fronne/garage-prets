@@ -3,8 +3,9 @@ import type { LigneHisto } from '../shared/types'
 import { api, errorText } from './api'
 import { Avatar } from './Board'
 import { DatePicker } from './DatePicker'
-import { Phone, Plate, X } from './icons'
+import { Cam, Phone, Plate, X } from './icons'
 import { Logo } from './Logo'
+import { ComparerPhotos, aDesPhotos } from './Photos'
 import { dayStr, telHref } from './util'
 
 // Date et heure, avec l'année seulement si ce n'est pas l'année en cours
@@ -58,6 +59,8 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
   const [rows, setRows] = useState<LigneHisto[] | null>(() => cache.get(params(memo.jour, memo.q)) ?? null)
   const [err, setErr] = useState('')
   const [n, setN] = useState(PAGE)
+  // Prêt dont on regarde le permis et les photos
+  const [ouvert, setOuvert] = useState<string | null>(null)
   const finRef = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
@@ -198,6 +201,15 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                       </div>
                     )}
                   </div>
+                  {aDesPhotos(r.photos) && (
+                    <>
+                      <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
+                        <Cam />
+                        {ouvert === r.id ? 'Cacher le permis et les photos' : 'Permis et photos'}
+                      </button>
+                      {ouvert === r.id && <ComparerPhotos photos={r.photos} />}
+                    </>
+                  )}
                 </div>
               </li>
             )

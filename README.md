@@ -5,7 +5,8 @@ Une application toute simple pour le garage Canal Mhirsi Service : savoir quelle
 ## Ce que fait l'application
 
 - **Grille de cartes** : chaque voiture avec son état (Dispo, Prêtée, Retard, Indispo), sa plaque et le client. Les voitures en retard passent en premier, les indisponibles en dernier. Toucher une pastille du haut (« 4 dispo », « 1 en retard »…) n'affiche que ces voitures.
-- **Prêter** : toucher une voiture dispo, taper le nom du client (ou choisir un client récent), valider. En option : date de retour prévue, photo du compteur, téléphone et note.
+- **Prêter** : toucher une voiture dispo, taper le nom du client (ou choisir un client récent), valider. En option : date de retour prévue, téléphone, note et photos.
+- **Photos** (toutes facultatives) : au départ, le **permis** du client (recto, verso, ou un seul des deux) et la **jauge et l'état** de la voiture (jauge, avant, arrière, côtés, détail ou dégât). Au retour, sur la fiche de la voiture, « État au retour » montre les photos du départ à gauche et permet de prendre les mêmes à droite, avant de toucher « Voiture rendue ». Toucher une ligne affiche le départ et le retour en grand, l'un sous l'autre, pour voir les différences. Tout reste dans l'**Historique** (« Permis et photos » sur chaque prêt).
 - **Rendre** : toucher la voiture prêtée, puis « Voiture rendue ». Un bouton « Annuler » reste affiché 5 secondes en cas d'erreur.
 - **Fiche** : client avec bouton d'appel, date de départ, retour prévu (en rouge s'il est dépassé), qui a fait le prêt, prêts précédents.
 - **Gérer une voiture** : toucher une voiture dispo, puis le petit bouton « Gérer la voiture » à côté de la plaque pour changer son nom ou sa plaque, la retirer du parc, ou la **mettre de côté** (contrôle technique, réparation…). Elle passe alors en « Indispo » (gris), avec une raison facultative, et on ne peut plus la prêter ; toucher la carte grise puis « Remettre disponible » pour la rendre de nouveau prêtable.

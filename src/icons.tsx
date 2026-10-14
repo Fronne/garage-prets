@@ -116,3 +116,10 @@ export const Chevron = () => (
     <path d="M9 18l6-6-6-6" />
   </S>
 )
+export const IdCard = () => (
+  <S sm>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <circle cx="9" cy="11" r="2" />
+    <path d="M6 16a3 3 0 0 1 6 0M14 10h4M14 14h3" />
+  </S>
+)

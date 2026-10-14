@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type { Pret, SyncData, Vehicule } from '../shared/types'
+import type { JeuPhotos, PhotoCle, PhotosPret, Pret, SyncData, Vehicule } from '../shared/types'
 import { appKeyMatches, codeMatches, makeToken, verifyToken } from './auth'
 import type { Env } from './env'
 
@@ -31,6 +31,27 @@ const optText = (v: unknown, max: number) => text(v, max) || null
 // Le téléphone choisit l'identifiant : renvoyer deux fois la même création (réseau instable) ne crée pas de doublon
 const idFrom = (v: unknown) => (typeof v === 'string' && UUID.test(v) ? v : crypto.randomUUID())
 const now = () => new Date().toISOString()
+
+// Photos d'un prêt : seulement les emplacements connus, chacun avec l'identifiant d'une photo envoyée
+const CLES_DEPART: PhotoCle[] = ['permis_recto', 'permis_verso', 'jauge', 'avant', 'arriere', 'gauche', 'droite', 'detail']
+const CLES_RETOUR: PhotoCle[] = ['jauge', 'avant', 'arriere', 'gauche', 'droite', 'detail']
+function jeuPhotos(v: unknown, cles: PhotoCle[]): JeuPhotos | undefined {
+  if (!v || typeof v !== 'object') return undefined
+  const jeu: JeuPhotos = {}
+  for (const k of cles) {
+    const id = (v as Record<string, unknown>)[k]
+    if (typeof id === 'string' && UUID.test(id)) jeu[k] = id
+  }
+  return Object.keys(jeu).length ? jeu : undefined
+}
+const lirePhotos = (s: unknown): PhotosPret | null => {
+  try {
+    return typeof s === 'string' ? JSON.parse(s) : null
+  } catch {
+    return null
+  }
+}
+const ecrirePhotos = (p: PhotosPret) => (p.depart || p.retour ? JSON.stringify(p) : null)
 // Heure donnée par le téléphone : un prêt ou un retour noté sans réseau garde son heure réelle. Plus de 14 jours ou dans le futur : on prend l'heure du serveur.
 function heureTel(v: unknown, auPlusTot?: string): string {
   const t = Date.parse(String(v ?? ''))
@@ -112,13 +133,14 @@ app.get('/api/sync', async (c) => {
   const [vehicules, prets] = await Promise.all([
     c.env.DB.prepare('SELECT id, nom, immat, indispo, indispo_le FROM vehicules WHERE archive = 0 ORDER BY nom').all<Vehicule>(),
     c.env.DB.prepare(
-      `SELECT id, vehicule_id, client, tel, note, depart, retour_prevu, retour, photo_depart, photo_retour, par
+      `SELECT id, vehicule_id, client, tel, note, depart, retour_prevu, retour, photo_depart, photo_retour, par, photos
        FROM prets WHERE retour IS NULL OR retour >= ? ORDER BY depart DESC LIMIT 1000`,
     )
       .bind(since)
       .all<Pret>(),
   ])
-  return c.json({ moi: c.get('prenom'), vehicules: vehicules.results, prets: prets.results } satisfies SyncData)
+  const ps = prets.results.map((p) => ({ ...p, photos: lirePhotos(p.photos) }))
+  return c.json({ moi: c.get('prenom'), vehicules: vehicules.results, prets: ps } satisfies SyncData)
 })
 
 // Historique complet, voitures retirées comprises : pour retrouver qui avait une voiture (PV, amende).
@@ -141,13 +163,13 @@ app.get('/api/historique', async (c) => {
     args.push('%' + q + '%', '%' + q + '%', ...(plaque ? ['%' + plaque + '%'] : []))
   }
   const rows = await c.env.DB.prepare(
-    `SELECT p.id, p.vehicule_id, p.client, p.tel, p.note, p.depart, p.retour_prevu, p.retour, p.par, v.nom, v.immat
+    `SELECT p.id, p.vehicule_id, p.client, p.tel, p.note, p.depart, p.retour_prevu, p.retour, p.par, p.photos, v.nom, v.immat
      FROM prets p JOIN vehicules v ON v.id = p.vehicule_id
      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY p.depart DESC LIMIT 300`,
   )
     .bind(...args)
-    .all()
-  return c.json(rows.results)
+    .all<{ photos: unknown }>()
+  return c.json(rows.results.map((r) => ({ ...r, photos: lirePhotos(r.photos) })))
 })
 
 // ---------- Voitures ----------
@@ -238,27 +260,54 @@ app.post('/api/prets', async (c) => {
   if (v.indispo !== null) throw new HttpError(409, 'Cette voiture est indisponible : remets-la disponible avant de la prêter.')
   // ON CONFLICT : un prêt renvoyé deux fois (réseau coupé pendant la réponse) n'est enregistré qu'une fois
   await c.env.DB.prepare(
-    `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, photo_depart, par)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`,
+    `INSERT INTO prets (id, vehicule_id, client, tel, note, depart, retour_prevu, photo_depart, par, photos)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO NOTHING`,
   )
-    .bind(id, vehiculeId, f.client, f.tel, f.note, heureTel(b.depart), f.retourPrevu, optText(b.photo_depart, 40), c.get('prenom'))
+    .bind(
+      id,
+      vehiculeId,
+      f.client,
+      f.tel,
+      f.note,
+      heureTel(b.depart),
+      f.retourPrevu,
+      optText(b.photo_depart, 40),
+      c.get('prenom'),
+      ecrirePhotos({ depart: jeuPhotos(b.photos?.depart, CLES_DEPART) }),
+    )
     .run()
   return c.json({ id })
 })
 
 app.put('/api/prets/:id', async (c) => {
-  const f = pretFields(await c.req.json())
+  const b = await c.req.json()
+  const f = pretFields(b)
+  const id = c.req.param('id')
   await c.env.DB.prepare('UPDATE prets SET client = ?, tel = ?, note = ?, retour_prevu = ?, maj_le = ? WHERE id = ?')
-    .bind(f.client, f.tel, f.note, f.retourPrevu, now(), c.req.param('id'))
+    .bind(f.client, f.tel, f.note, f.retourPrevu, now(), id)
     .run()
+  // Photos du départ changées depuis « Modifier le prêt » ; celles du retour restent
+  if (b.photos && typeof b.photos === 'object') {
+    const avant = lirePhotos(await c.env.DB.prepare('SELECT photos FROM prets WHERE id = ?').bind(id).first('photos')) ?? {}
+    await c.env.DB.prepare('UPDATE prets SET photos = ? WHERE id = ?')
+      .bind(ecrirePhotos({ ...avant, depart: jeuPhotos(b.photos.depart, CLES_DEPART) }), id)
+      .run()
+  }
   return c.json({ ok: true })
 })
 
 app.post('/api/prets/:id/retour', async (c) => {
   const b = await c.req.json().catch(() => ({}))
-  const depart = await c.env.DB.prepare('SELECT depart FROM prets WHERE id = ?').bind(c.req.param('id')).first<string>('depart')
-  await c.env.DB.prepare('UPDATE prets SET retour = ?, photo_retour = COALESCE(?, photo_retour), maj_le = ? WHERE id = ? AND retour IS NULL')
-    .bind(heureTel(b.at, depart ?? undefined), optText(b.photo_retour, 40), now(), c.req.param('id'))
+  const p = await c.env.DB.prepare('SELECT depart, photos FROM prets WHERE id = ?')
+    .bind(c.req.param('id'))
+    .first<{ depart: string; photos: string | null }>()
+  // Jauge et état de la voiture au retour, à comparer avec ceux du départ
+  const retour = jeuPhotos(b.photos, CLES_RETOUR)
+  const photos = retour ? ecrirePhotos({ ...lirePhotos(p?.photos), retour }) : (p?.photos ?? null)
+  await c.env.DB.prepare(
+    'UPDATE prets SET retour = ?, photo_retour = COALESCE(?, photo_retour), photos = ?, maj_le = ? WHERE id = ? AND retour IS NULL',
+  )
+    .bind(heureTel(b.at, p?.depart), optText(b.photo_retour, 40), photos, now(), c.req.param('id'))
     .run()
   return c.json({ ok: true })
 })
@@ -282,7 +331,7 @@ app.delete('/api/prets/:id', async (c) => {
   return c.json({ ok: true })
 })
 
-// ---------- Photos du compteur ----------
+// ---------- Photos (permis, jauge, état de la voiture) ----------
 
 app.post('/api/photos', async (c) => {
   const b = await c.req.json()

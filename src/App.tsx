@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { Pret, SyncData, Vehicule } from '../shared/types'
+import type { JeuPhotos, Pret, SyncData, Vehicule } from '../shared/types'
 import { api, ApiError, errorText, getToken, setToken } from './api'
 import { Board } from './Board'
 import { Login } from './Login'
@@ -196,8 +196,8 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     const down = (e: TouchEvent) => {
       const t = e.touches[0]
       const bord = t.clientX < 30 || t.clientX > window.innerWidth - 30
-      // Pas dans une fenêtre ou le calendrier
-      const dansFenetre = e.target instanceof Element && !!e.target.closest('.scrim, .cal-scrim')
+      // Pas dans une fenêtre, le calendrier ou une photo en grand
+      const dansFenetre = e.target instanceof Element && !!e.target.closest('.scrim, .cal-scrim, .vue')
       start = e.touches.length === 1 && !bord && !dansFenetre && !sheetOpen.current ? { x: t.clientX, y: t.clientY, t: Date.now() } : null
     }
     const up = (e: TouchEvent) => {
@@ -267,6 +267,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
       photo_depart: d.photo,
       photo_retour: null,
       par: data!.moi,
+      photos: Object.keys(d.photos).length ? { depart: d.photos } : null,
     }
     delete drafts.current[v.id]
     buzz()
@@ -277,18 +278,30 @@ function Garage({ onLogout }: { onLogout: () => void }) {
   }
 
   function modifier(p: Pret, d: Draft) {
-    const patch = { client: d.client.trim(), tel: d.tel.trim() || null, note: d.note.trim() || null, retour_prevu: d.retour || null }
+    const patch = {
+      client: d.client.trim(),
+      tel: d.tel.trim() || null,
+      note: d.note.trim() || null,
+      retour_prevu: d.retour || null,
+      photos: { ...p.photos, depart: d.photos },
+    }
     change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, ...patch } : x))), () => envoyer('/prets/' + p.id, 'PUT', patch), { msg: 'Prêt modifié' })
   }
 
-  function rendue(p: Pret, v: Vehicule) {
+  // « retour » : jauge et état de la voiture photographiés au retour, à comparer avec le départ
+  function rendue(p: Pret, v: Vehicule, retour?: JeuPhotos) {
     const at = new Date().toISOString()
+    const photos = retour && Object.keys(retour).length ? retour : undefined
     buzz()
-    change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at } : x))), () => envoyer(`/prets/${p.id}/retour`, 'POST', { at }), {
-      msg: `${v.nom} rendue`,
-      undo: () =>
-        change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: null } : x))), () => envoyer(`/prets/${p.id}/annuler-retour`, 'POST')),
-    })
+    change(
+      setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at, ...(photos ? { photos: { ...x.photos, retour: photos } } : {}) } : x))),
+      () => envoyer(`/prets/${p.id}/retour`, 'POST', { at, photos }),
+      {
+        msg: `${v.nom} rendue`,
+        undo: () =>
+          change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: null } : x))), () => envoyer(`/prets/${p.id}/annuler-retour`, 'POST')),
+      },
+    )
   }
 
   function saveVehicule(v: Vehicule | undefined, nom: string, immat: string) {
@@ -359,7 +372,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           p={p}
           hist={hist}
           onClose={close}
-          onRendue={() => rendue(p, v)}
+          onRendue={(retour) => rendue(p, v, retour)}
           onModifier={() => setSheet({ kind: 'preter', vid: v.id, pid: p.id })}
           onHistorique={() => {
             chercherDansHistorique(v.immat || v.nom)

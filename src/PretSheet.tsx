@@ -1,11 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Pret, Vehicule } from '../shared/types'
-import { AppIcon, Cal, Check, Pen, Phone, Plate } from './icons'
+import type { JeuPhotos, Pret, Vehicule } from '../shared/types'
+import { AppIcon, Cal, Cam, Check, IdCard, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
+import { ETAT, GrillePhotos, PERMIS, nbPhotos } from './Photos'
 import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { dayStr, fmtS } from './util'
 
-export type Draft = { client: string; retour: string; tel: string; note: string; photo: string | null; open: 'retour' | 'tel' | 'note' | null }
+export type Draft = {
+  client: string
+  retour: string
+  tel: string
+  note: string
+  photo: string | null
+  /** Permis, jauge et état de la voiture au départ */
+  photos: JeuPhotos
+  open: 'retour' | 'tel' | 'note' | 'permis' | 'photos' | null
+}
 
 export const emptyDraft = (p?: Pret): Draft => ({
   client: p?.client ?? '',
@@ -13,6 +23,7 @@ export const emptyDraft = (p?: Pret): Draft => ({
   tel: p?.tel ?? '',
   note: p?.note ?? '',
   photo: p?.photo_depart ?? null,
+  photos: { ...p?.photos?.depart },
   open: null,
 })
 
@@ -38,6 +49,7 @@ type Props = {
 export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVehicule }: Props) {
   const [d, setD] = useState(draft)
   const [err, setErr] = useState('')
+  const [errPhoto, setErrPhoto] = useState('')
   const clientRef = useRef<HTMLInputElement>(null)
   const ctaRef = useRef<HTMLButtonElement>(null)
 
@@ -67,7 +79,11 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
 
   // Modifié par rapport au prêt d'origine (ou, pour un nouveau prêt, quelque chose de rempli)
   const base = emptyDraft(pret)
-  const dirty = (['client', 'retour', 'tel', 'note', 'photo'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? ''))
+  const dirty =
+    (['client', 'retour', 'tel', 'note', 'photo'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? '')) ||
+    JSON.stringify(d.photos) !== JSON.stringify(base.photos)
+  const nPermis = nbPhotos(d.photos, PERMIS)
+  const nEtat = nbPhotos(d.photos, ETAT)
 
   const title = pret ? 'Modifier le prêt' : 'Prêter la ' + v.nom
   return (
@@ -144,6 +160,17 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 Note
               </button>
             </div>
+            {/* Photos : le permis du client (recto, verso ou un seul des deux), la jauge et l'état de la voiture pour comparer au retour */}
+            <div className="opts suite" role="group" aria-label="Photos, facultatif">
+              <button type="button" className={'opt' + (nPermis ? ' done' : '')} aria-expanded={d.open === 'permis'} onClick={() => toggle('permis')}>
+                <IdCard />
+                {nPermis ? `Permis · ${nPermis}` : 'Permis'}
+              </button>
+              <button type="button" className={'opt' + (nEtat ? ' done' : '')} aria-expanded={d.open === 'photos'} onClick={() => toggle('photos')}>
+                <Cam />
+                {nEtat ? `Jauge et état · ${nEtat}` : 'Jauge et état'}
+              </button>
+            </div>
             {d.open === 'retour' && (
               <div className="chips">
                 {RETOURS.map(([label, n]) => {
@@ -179,6 +206,23 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                   onChange={(e) => set({ note: e.target.value })}
                 />
               </>
+            )}
+            {d.open === 'permis' && (
+              <>
+                <div className="sub">Permis du client : recto, verso, ou un seul</div>
+                <GrillePhotos cles={PERMIS} jeu={d.photos} onChange={(photos) => set({ photos })} onErreur={setErrPhoto} />
+              </>
+            )}
+            {d.open === 'photos' && (
+              <>
+                <div className="sub">Jauge et état de la voiture au départ</div>
+                <GrillePhotos cles={ETAT} jeu={d.photos} onChange={(photos) => set({ photos })} onErreur={setErrPhoto} />
+              </>
+            )}
+            {errPhoto && (d.open === 'permis' || d.open === 'photos') && (
+              <div className="err" role="alert">
+                {errPhoto}
+              </div>
             )}
             <button ref={ctaRef} className="cta" type="submit">
               <Check />

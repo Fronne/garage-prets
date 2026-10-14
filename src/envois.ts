@@ -29,7 +29,8 @@ export async function envoyer(path: string, method: string, body?: unknown): Pro
     return true
   } catch (e) {
     if (!sansReseau(e)) throw e
-    ecrire([{ path, method, body }])
+    // Plusieurs envois peuvent échouer en même temps (photos) : on ajoute à la file sans écraser
+    ecrire([...lire(), { path, method, body }])
     return false
   }
 }

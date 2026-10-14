@@ -1,16 +1,34 @@
 import { useEffect, useState } from 'react'
-import type { Pret, Vehicule } from '../shared/types'
+import type { JeuPhotos, Pret, Vehicule } from '../shared/types'
 import { photoUrl } from './api'
-import { Check, Pen, Phone, Plate, Warn } from './icons'
+import { Cam, Check, IdCard, Pen, Phone, Plate, Warn } from './icons'
+import { ComparerPhotos, ETAT, PERMIS, nbPhotos } from './Photos'
 import { Sheet, SheetHead } from './Sheet'
 import { days, depuis, fmt, fmtS, isLate, telHref } from './util'
 
-type Props = { v: Vehicule; p: Pret; hist: Pret[]; onClose: () => void; onRendue: () => void; onModifier: () => void; onHistorique: () => void }
+type Props = {
+  v: Vehicule
+  p: Pret
+  hist: Pret[]
+  onClose: () => void
+  onRendue: (retour: JeuPhotos) => void
+  onModifier: () => void
+  onHistorique: () => void
+}
+
+// Photos du retour prises avant de toucher « Voiture rendue » : gardées si on ferme la fiche entre-temps
+const retours: Record<string, JeuPhotos> = {}
 
 // Fiche d'une voiture dehors : chez qui, depuis quand, et le bouton « Voiture rendue »
 export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistorique }: Props) {
   const late = isLate(p)
   const [photo, setPhoto] = useState<string | null>(null)
+  const [retour, setRetourRaw] = useState<JeuPhotos>(() => retours[p.id] ?? {})
+  const setRetour = (j: JeuPhotos) => setRetourRaw((retours[p.id] = j))
+  const [ouvert, setOuvert] = useState<'permis' | 'etat' | null>(null)
+  const [errPhoto, setErrPhoto] = useState('')
+  const nPermis = nbPhotos(p.photos?.depart, PERMIS)
+  const nRetour = nbPhotos(retour, ETAT)
 
   useEffect(() => {
     if (!p.photo_depart) return
@@ -80,6 +98,35 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
             )}
           </div>
           {photo && <img className="photo" src={photo} alt="Compteur au départ" />}
+          {/* Permis du client, et jauge et état de la voiture : départ à gauche, photos du retour à prendre à droite */}
+          <div className="opts" role="group" aria-label="Photos">
+            {nPermis > 0 && (
+              <button type="button" className="opt" aria-expanded={ouvert === 'permis'} onClick={() => setOuvert(ouvert === 'permis' ? null : 'permis')}>
+                <IdCard />
+                Permis
+              </button>
+            )}
+            <button
+              type="button"
+              className={'opt' + (nRetour ? ' done' : '')}
+              aria-expanded={ouvert === 'etat'}
+              onClick={() => setOuvert(ouvert === 'etat' ? null : 'etat')}
+            >
+              <Cam />
+              {nRetour ? `État au retour · ${nRetour}` : 'État au retour'}
+            </button>
+          </div>
+          {ouvert === 'permis' && <ComparerPhotos photos={p.photos} partie="permis" />}
+          {ouvert === 'etat' && (
+            <>
+              <ComparerPhotos photos={p.photos} partie="etat" retour={retour} onRetour={setRetour} onErreur={setErrPhoto} />
+              {errPhoto && (
+                <div className="err" role="alert">
+                  {errPhoto}
+                </div>
+              )}
+            </>
+          )}
           {hist.length > 0 && (
             <>
               <div className="sub">Prêts précédents</div>
@@ -109,7 +156,8 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
           <button
             className="cta"
             onClick={() => {
-              onRendue()
+              onRendue(retour)
+              delete retours[p.id]
               close()
             }}
           >
