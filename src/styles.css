@@ -86,6 +86,13 @@ svg.i.app { stroke-width: 1.2 } /* la voiture de l'icône remplit tout le carré
 .tile.add { min-height: 4.5rem; border: 1.5px dashed var(--dash); background: transparent; box-shadow: none; color: var(--muted); align-items: center; justify-content: center; flex-direction: row; gap: 8px; font-weight: 600 }
 .tile.add svg { width: 18px; height: 18px }
 .grid .tile.add:only-child { grid-column: 1 / -1 }
+/* Les cartes d'une même ligne partagent leurs rangées (haut, nom, plaque, bas) : un nom sur deux lignes
+   décale aussi la plaque de la voisine, au lieu de laisser un trou sous elle */
+@supports (grid-template-rows: subgrid) {
+  .grid > * { grid-row: span 4 }
+  .grid > .tile:not(.add) { display: grid; grid-template-rows: subgrid; grid-template-columns: minmax(0, 1fr); row-gap: 8px; justify-items: start }
+  .tile .foot { grid-row: 4 }
+}
 @media (max-width: 320px) { .grid { grid-template-columns: 1fr } }
 
 /* Feuilles (fenêtres qui montent du bas) */

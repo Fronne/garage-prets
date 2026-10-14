@@ -232,7 +232,7 @@ function Out({ v, p, flash, lp, onClick }: { v: Vehicule; p: Pret; flash: boolea
       <span className="foot">
         <span className="who">
           <User />
-          {p.client}
+          <span className="une-ligne">{p.client}</span>
         </span>
         <span className="since">
           <Clock />
