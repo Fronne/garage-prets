@@ -5,7 +5,7 @@ import { Avatar } from './Board'
 import { DatePicker } from './DatePicker'
 import { Cam, Phone, Plate, X } from './icons'
 import { Logo } from './Logo'
-import { VoirPhotos, aDesPhotos } from './Photos'
+import { ETAT, VoirPhotos, aDesPhotos, nbPhotos } from './Photos'
 import { dayStr, telHref } from './util'
 
 // Date et heure, avec l'année seulement si ce n'est pas l'année en cours
@@ -205,7 +205,10 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                     <>
                       <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
                         <Cam />
-                        {ouvert === r.id ? 'Cacher le permis et les photos' : 'Permis et photos'}
+                        {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
+                        {nbPhotos(r.photos?.depart, ETAT)
+                          ? ouvert === r.id ? 'Cacher le permis et les photos' : 'Permis et photos'
+                          : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
                       </button>
                       {ouvert === r.id && <VoirPhotos photos={r.photos} />}
                     </>

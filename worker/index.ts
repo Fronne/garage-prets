@@ -34,7 +34,7 @@ const now = () => new Date().toISOString()
 
 // Photos d'un prêt : seulement les emplacements connus, chacun avec l'identifiant d'une photo envoyée
 const CLES_DEPART: PhotoCle[] = ['permis_recto', 'permis_verso', 'jauge', 'avant', 'arriere', 'gauche', 'droite', 'detail']
-const CLES_RETOUR: PhotoCle[] = ['jauge', 'avant', 'arriere', 'gauche', 'droite', 'detail']
+const CLES_PERMIS: PhotoCle[] = ['permis_recto', 'permis_verso']
 function jeuPhotos(v: unknown, cles: PhotoCle[]): JeuPhotos | undefined {
   if (!v || typeof v !== 'object') return undefined
   const jeu: JeuPhotos = {}
@@ -298,19 +298,42 @@ app.put('/api/prets/:id', async (c) => {
 
 app.post('/api/prets/:id/retour', async (c) => {
   const b = await c.req.json().catch(() => ({}))
-  const p = await c.env.DB.prepare('SELECT depart, photos FROM prets WHERE id = ?')
-    .bind(c.req.param('id'))
-    .first<{ depart: string; photos: string | null }>()
-  // Jauge et état de la voiture au retour, à comparer avec ceux du départ
-  const retour = jeuPhotos(b.photos, CLES_RETOUR)
-  const photos = retour ? ecrirePhotos({ ...lirePhotos(p?.photos), retour }) : (p?.photos ?? null)
-  await c.env.DB.prepare(
-    'UPDATE prets SET retour = ?, photo_retour = COALESCE(?, photo_retour), photos = ?, maj_le = ? WHERE id = ? AND retour IS NULL',
-  )
-    .bind(heureTel(b.at, p?.depart), optText(b.photo_retour, 40), photos, now(), c.req.param('id'))
+  const depart = await c.env.DB.prepare('SELECT depart FROM prets WHERE id = ?').bind(c.req.param('id')).first<string>('depart')
+  await c.env.DB.prepare('UPDATE prets SET retour = ?, maj_le = ? WHERE id = ? AND retour IS NULL')
+    .bind(heureTel(b.at, depart ?? undefined), now(), c.req.param('id'))
     .run()
+  c.executionCtx.waitUntil(alleger(c.env).catch((e) => console.error(e)))
   return c.json({ ok: true })
 })
+
+// Une fois la voiture rendue, l'Historique ne garde que le permis : les photos de la voiture (jauge, état, compteur) sont effacées
+// pour ne pas remplir la base. On attend un jour après le retour, le temps d'un « Annuler » ou d'un retour noté par erreur.
+async function alleger(env: Env) {
+  const avant = new Date(Date.now() - 86_400_000).toISOString()
+  const voiture = CLES_DEPART.filter((k) => !CLES_PERMIS.includes(k))
+  const { results } = await env.DB.prepare(
+    `SELECT id, photos, photo_depart, photo_retour FROM prets
+     WHERE retour IS NOT NULL AND retour < ?
+       AND (photo_depart IS NOT NULL OR photo_retour IS NOT NULL OR photos LIKE '%"retour"%' OR ${voiture.map(() => 'photos LIKE ?').join(' OR ')})
+     LIMIT 50`,
+  )
+    .bind(avant, ...voiture.map((k) => `%"${k}"%`))
+    .all<{ id: string; photos: string | null; photo_depart: string | null; photo_retour: string | null }>()
+  if (!results.length) return
+  const effacer: string[] = []
+  const maj = results.map((r) => {
+    const p = lirePhotos(r.photos) ?? {}
+    const permis = jeuPhotos(p.depart, CLES_PERMIS)
+    for (const jeu of [p.depart, p.retour])
+      for (const [k, id] of Object.entries(jeu ?? {})) if (!CLES_PERMIS.includes(k as PhotoCle) && id) effacer.push(id)
+    for (const id of [r.photo_depart, r.photo_retour]) if (id) effacer.push(id)
+    return env.DB.prepare('UPDATE prets SET photos = ?, photo_depart = NULL, photo_retour = NULL WHERE id = ?').bind(
+      permis ? JSON.stringify({ depart: permis }) : null,
+      r.id,
+    )
+  })
+  await env.DB.batch([...maj, ...effacer.map((id) => env.DB.prepare('DELETE FROM photos WHERE id = ?').bind(id))])
+}
 
 // « Annuler » juste après « Voiture rendue »
 app.post('/api/prets/:id/annuler-retour', async (c) => {

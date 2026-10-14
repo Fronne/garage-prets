@@ -20,7 +20,7 @@ export const ETAT: [PhotoCle, string][] = [
 ]
 
 export const nbPhotos = (jeu: JeuPhotos | undefined, cles: [PhotoCle, string][]) => cles.filter(([k]) => jeu?.[k]).length
-export const aDesPhotos = (p: PhotosPret | null | undefined) => !!p && nbPhotos(p.depart, [...PERMIS, ...ETAT]) + nbPhotos(p.retour, ETAT) > 0
+export const aDesPhotos = (p: PhotosPret | null | undefined) => !!p && nbPhotos(p.depart, [...PERMIS, ...ETAT]) > 0
 
 // Photos prises sur ce téléphone : affichées tout de suite, sans attendre leur envoi
 const locales = new Map<string, string>()
@@ -214,11 +214,8 @@ type VoirProps = {
 export function VoirPhotos({ photos, partie }: VoirProps) {
   const [vue, setVue] = useState<Vue | null>(null)
   const dep = photos?.depart ?? {}
-  // On ne prend plus de photos au retour, mais les rares prêts qui en ont les gardent dans l'Historique
-  const ret = photos?.retour ?? {}
   const permis: [PhotoCle, string][] = partie === 'etat' ? [] : PERMIS.filter(([k]) => dep[k]).map(([k, l]) => [k, 'Permis ' + l.toLowerCase()])
   const etat = partie === 'permis' ? [] : ETAT.filter(([k]) => dep[k])
-  const etatRetour = partie === 'permis' ? [] : ETAT.filter(([k]) => ret[k])
   const grille = (titre: string, cles: [PhotoCle, string][], jeu: JeuPhotos, suffixe: string) =>
     cles.length > 0 && (
       <>
@@ -234,7 +231,6 @@ export function VoirPhotos({ photos, partie }: VoirProps) {
     <div className="cmp-bloc">
       {grille('Permis', permis, dep, '')}
       {grille('Jauge et état au départ', etat, dep, ' au départ')}
-      {grille('Au retour', etatRetour, ret, ' au retour')}
       {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
     </div>
   )
