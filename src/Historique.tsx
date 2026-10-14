@@ -188,20 +188,24 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                       <span>Rendue le</span>
                       <span>{r.retour ? quand(r.retour) : 'Toujours dehors'}</span>
                     </div>
-                    {r.par && (
-                      <div>
-                        <span>Prêtée par</span>
-                        <span>{r.par}</span>
-                      </div>
-                    )}
-                    {/* En bas à droite, sur la ligne de « Prêtée par », pour ne pas ajouter de ligne */}
-                    {aDesPhotos(r.photos) && (
-                      <div className="h-ph">
-                        <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
-                          <Cam />
-                          {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
-                          {nbPhotos(r.photos?.depart, ETAT) ? (ouvert === r.id ? 'Cacher les photos' : 'Permis et photos') : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
-                        </button>
+                    {/* « Prêtée par » à gauche et le bouton des photos à droite, sur la même ligne, pour ne pas en ajouter une */}
+                    {(r.par || aDesPhotos(r.photos)) && (
+                      <div className="full h-bas">
+                        {r.par ? (
+                          <div>
+                            <span>Prêtée par</span>
+                            <span>{r.par}</span>
+                          </div>
+                        ) : (
+                          <i />
+                        )}
+                        {aDesPhotos(r.photos) && (
+                          <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
+                            <Cam />
+                            {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
+                            {nbPhotos(r.photos?.depart, ETAT) ? (ouvert === r.id ? 'Cacher les photos' : 'Permis et photos') : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
+                          </button>
+                        )}
                       </div>
                     )}
                     {r.note && (
