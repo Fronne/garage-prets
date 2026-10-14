@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { JeuPhotos, Pret, Vehicule } from '../shared/types'
 import { AppIcon, Cal, Cam, Check, IdCard, Pen, Phone, Plate } from './icons'
 import { DatePicker } from './DatePicker'
-import { ETAT, GrillePhotos, PERMIS, nbPhotos } from './Photos'
+import { ETAT, GrilleDegats, GrillePhotos, PERMIS, nbPhotos, resumeEtat, versDegats } from './Photos'
 import { Sheet, SheetHead, fermerClavier } from './Sheet'
 import { dayStr, fmtS } from './util'
 
@@ -23,7 +23,7 @@ export const emptyDraft = (p?: Pret): Draft => ({
   tel: p?.tel ?? '',
   note: p?.note ?? '',
   photo: p?.photo_depart ?? null,
-  photos: { ...p?.photos?.depart },
+  photos: versDegats({ ...p?.photos?.depart }),
   open: null,
 })
 
@@ -83,7 +83,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
     (['client', 'retour', 'tel', 'note', 'photo'] as const).some((k) => (d[k] ?? '') !== (base[k] ?? '')) ||
     JSON.stringify(d.photos) !== JSON.stringify(base.photos)
   const nPermis = nbPhotos(d.photos, PERMIS)
-  const nEtat = nbPhotos(d.photos, ETAT)
+  const etat = resumeEtat(d.photos)
 
   const title = pret ? 'Modifier le prêt' : 'Prêter la ' + v.nom
   return (
@@ -166,9 +166,9 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 <IdCard />
                 {nPermis ? `Permis · ${nPermis}` : 'Permis'}
               </button>
-              <button type="button" className={'opt' + (nEtat ? ' done' : '')} aria-expanded={d.open === 'photos'} onClick={() => toggle('photos')}>
+              <button type="button" className={'opt long' + (etat ? ' done' : '')} aria-expanded={d.open === 'photos'} onClick={() => toggle('photos')}>
                 <Cam />
-                {nEtat ? `Jauge et état · ${nEtat}` : 'Jauge et état'}
+                {etat ? `Jauge et état · ${etat}` : 'Jauge et état'}
               </button>
             </div>
             {d.open === 'retour' && (
@@ -217,6 +217,8 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
               <>
                 <div className="sub">Jauge de carburant et état de la voiture au départ</div>
                 <GrillePhotos cles={ETAT} jeu={d.photos} onChange={(photos) => set({ photos })} onErreur={setErrPhoto} />
+                <div className="sub">Dégâts déjà là : une photo par dégât</div>
+                <GrilleDegats jeu={d.photos} onChange={(photos) => set({ photos })} onErreur={setErrPhoto} />
               </>
             )}
             {errPhoto && (d.open === 'permis' || d.open === 'photos') && (

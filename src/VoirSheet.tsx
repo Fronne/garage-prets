@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Pret, Vehicule } from '../shared/types'
 import { photoUrl } from './api'
 import { Cam, Check, IdCard, Pen, Phone, Plate, Warn } from './icons'
-import { ETAT, PERMIS, VoirPhotos, nbPhotos } from './Photos'
+import { PERMIS, VoirPhotos, nbEtat, nbPhotos, resumeEtat } from './Photos'
 import { Sheet, SheetHead } from './Sheet'
 import { days, depuis, fmt, fmtS, isLate, telHref } from './util'
 
@@ -22,7 +22,7 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
   const [photo, setPhoto] = useState<string | null>(null)
   const [ouvert, setOuvert] = useState<'permis' | 'etat' | null>(null)
   const nPermis = nbPhotos(p.photos?.depart, PERMIS)
-  const nEtat = nbPhotos(p.photos?.depart, ETAT)
+  const nEtat = nbEtat(p.photos?.depart)
 
   useEffect(() => {
     if (!p.photo_depart) return
@@ -102,9 +102,9 @@ export function VoirSheet({ v, p, hist, onClose, onRendue, onModifier, onHistori
               </button>
             )}
             {nEtat > 0 && (
-              <button type="button" className="opt" aria-expanded={ouvert === 'etat'} onClick={() => setOuvert(ouvert === 'etat' ? null : 'etat')}>
+              <button type="button" className="opt long" aria-expanded={ouvert === 'etat'} onClick={() => setOuvert(ouvert === 'etat' ? null : 'etat')}>
                 <Cam />
-                Jauge et état · {nEtat}
+                Jauge et état · {resumeEtat(p.photos?.depart)}
               </button>
             )}
             </div>

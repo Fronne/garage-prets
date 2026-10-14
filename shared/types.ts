@@ -28,10 +28,15 @@ export interface Pret {
   photos?: PhotosPret | null
 }
 
-/** Emplacements de photo d'un prêt. Le permis ne se prend qu'au départ. */
+/** Emplacements de photo d'un prêt. Le permis ne se prend qu'au départ. « detail » : ancienne case unique de dégât, remplacée par la liste « degats » */
 export type PhotoCle = 'permis_recto' | 'permis_verso' | 'jauge' | 'avant' | 'arriere' | 'gauche' | 'droite' | 'detail'
-/** Identifiant de la photo (table « photos ») pour chaque emplacement rempli */
-export type JeuPhotos = Partial<Record<PhotoCle, string>>
+/** Un dégât photographié, avec où il est si on l'a noté */
+export interface Degat {
+  id: string
+  note?: string
+}
+/** Identifiant de la photo (table « photos ») pour chaque emplacement rempli, et les dégâts, autant qu'il en faut */
+export type JeuPhotos = Partial<Record<PhotoCle, string>> & { degats?: Degat[] }
 export interface PhotosPret {
   depart?: JeuPhotos
   retour?: JeuPhotos

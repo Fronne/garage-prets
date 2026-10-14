@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import type { JeuPhotos, PhotoCle, PhotosPret, Pret, SyncData, Vehicule } from '../shared/types'
+import type { Degat, JeuPhotos, PhotoCle, PhotosPret, Pret, SyncData, Vehicule } from '../shared/types'
 import { appKeyMatches, codeMatches, makeToken, verifyToken } from './auth'
 import type { Env } from './env'
 
@@ -44,6 +44,26 @@ function jeuPhotos(v: unknown, cles: PhotoCle[]): JeuPhotos | undefined {
   }
   return Object.keys(jeu).length ? jeu : undefined
 }
+// Photos du départ : les emplacements, plus les dégâts (10 au plus, chacun avec une note courte facultative)
+const MAX_DEGATS = 10
+function jeuDepart(v: unknown): JeuPhotos | undefined {
+  const jeu = jeuPhotos(v, CLES_DEPART) ?? {}
+  const liste = v && typeof v === 'object' ? (v as { degats?: unknown }).degats : undefined
+  const degats: Degat[] = []
+  if (Array.isArray(liste))
+    for (const d of liste.slice(0, MAX_DEGATS)) {
+      if (!d || typeof d !== 'object' || typeof d.id !== 'string' || !UUID.test(d.id)) continue
+      const note = text(d.note, 80)
+      degats.push(note ? { id: d.id, note } : { id: d.id })
+    }
+  if (degats.length) jeu.degats = degats
+  return Object.keys(jeu).length ? jeu : undefined
+}
+// Tous les identifiants de photo d'un jeu, emplacements et dégâts
+const idsJeu = (jeu: JeuPhotos | undefined) => [
+  ...Object.entries(jeu ?? {}).flatMap(([k, id]) => (k !== 'degats' && typeof id === 'string' ? [id] : [])),
+  ...(jeu?.degats ?? []).map((d) => d.id),
+]
 const lirePhotos = (s: unknown): PhotosPret | null => {
   try {
     return typeof s === 'string' ? JSON.parse(s) : null
@@ -273,7 +293,7 @@ app.post('/api/prets', async (c) => {
       f.retourPrevu,
       optText(b.photo_depart, 40),
       c.get('prenom'),
-      ecrirePhotos({ depart: jeuPhotos(b.photos?.depart, CLES_DEPART) }),
+      ecrirePhotos({ depart: jeuDepart(b.photos?.depart) }),
     )
     .run()
   return c.json({ id })
@@ -290,7 +310,7 @@ app.put('/api/prets/:id', async (c) => {
   if (b.photos && typeof b.photos === 'object') {
     const avant = lirePhotos(await c.env.DB.prepare('SELECT photos FROM prets WHERE id = ?').bind(id).first('photos')) ?? {}
     await c.env.DB.prepare('UPDATE prets SET photos = ? WHERE id = ?')
-      .bind(ecrirePhotos({ ...avant, depart: jeuPhotos(b.photos.depart, CLES_DEPART) }), id)
+      .bind(ecrirePhotos({ ...avant, depart: jeuDepart(b.photos.depart) }), id)
       .run()
   }
   return c.json({ ok: true })
@@ -310,7 +330,7 @@ app.post('/api/prets/:id/retour', async (c) => {
 // pour ne pas remplir la base. On attend un jour après le retour, le temps d'un « Annuler » ou d'un retour noté par erreur.
 async function alleger(env: Env) {
   const avant = new Date(Date.now() - 86_400_000).toISOString()
-  const voiture = CLES_DEPART.filter((k) => !CLES_PERMIS.includes(k))
+  const voiture = [...CLES_DEPART.filter((k) => !CLES_PERMIS.includes(k)), 'degats']
   const { results } = await env.DB.prepare(
     `SELECT id, photos, photo_depart, photo_retour FROM prets
      WHERE retour IS NOT NULL AND retour < ?
@@ -324,8 +344,8 @@ async function alleger(env: Env) {
   const maj = results.map((r) => {
     const p = lirePhotos(r.photos) ?? {}
     const permis = jeuPhotos(p.depart, CLES_PERMIS)
-    for (const jeu of [p.depart, p.retour])
-      for (const [k, id] of Object.entries(jeu ?? {})) if (!CLES_PERMIS.includes(k as PhotoCle) && id) effacer.push(id)
+    const garder = idsJeu(permis)
+    for (const jeu of [p.depart, p.retour]) for (const id of idsJeu(jeu)) if (!garder.includes(id)) effacer.push(id)
     for (const id of [r.photo_depart, r.photo_retour]) if (id) effacer.push(id)
     return env.DB.prepare('UPDATE prets SET photos = ?, photo_depart = NULL, photo_retour = NULL WHERE id = ?').bind(
       permis ? JSON.stringify({ depart: permis }) : null,

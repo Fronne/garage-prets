@@ -378,6 +378,12 @@ html.fige, html.fige body { overflow: hidden }
 .case-x { position: absolute; top: -6px; right: -6px; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--on-cta); display: flex; align-items: center; justify-content: center; cursor: pointer }
 .case-x::after { content: ''; position: absolute; inset: -7px }
 .cmp-bloc { display: flex; flex-direction: column; gap: 8px }
+/* Dégâts au départ : une ligne par photo, avec où il est à côté */
+.degats { display: flex; flex-direction: column; gap: 8px }
+.degat { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center }
+.case.prendre.ajout { aspect-ratio: auto; min-height: 50px; flex-direction: row; gap: 8px }
+/* « Jauge et état · 3/5 · 2 dégâts » : passe sur deux lignes plutôt que d'être coupé */
+.opt.long { white-space: normal; line-height: 1.2; text-align: center; padding: 4px 8px }
 .h-photos { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; font-size: 0.875rem; white-space: nowrap; flex: none }
 .kv .h-bas { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 12px }
 .kv .h-bas .h-photos { align-self: flex-end }
