@@ -194,6 +194,16 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                         <span>{r.par}</span>
                       </div>
                     )}
+                    {/* En bas à droite, sur la ligne de « Prêtée par », pour ne pas ajouter de ligne */}
+                    {aDesPhotos(r.photos) && (
+                      <div className="h-ph">
+                        <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
+                          <Cam />
+                          {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
+                          {nbPhotos(r.photos?.depart, ETAT) ? (ouvert === r.id ? 'Cacher les photos' : 'Permis et photos') : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
+                        </button>
+                      </div>
+                    )}
                     {r.note && (
                       <div className="full">
                         <span>Note</span>
@@ -201,18 +211,7 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                       </div>
                     )}
                   </div>
-                  {aDesPhotos(r.photos) && (
-                    <>
-                      <button type="button" className="link h-photos" aria-expanded={ouvert === r.id} onClick={() => setOuvert(ouvert === r.id ? null : r.id)}>
-                        <Cam />
-                        {/* Voiture rendue depuis plus d'un jour : il ne reste que le permis */}
-                        {nbPhotos(r.photos?.depart, ETAT)
-                          ? ouvert === r.id ? 'Cacher le permis et les photos' : 'Permis et photos'
-                          : ouvert === r.id ? 'Cacher le permis' : 'Permis'}
-                      </button>
-                      {ouvert === r.id && <VoirPhotos photos={r.photos} />}
-                    </>
-                  )}
+                  {ouvert === r.id && <VoirPhotos photos={r.photos} />}
                 </div>
               </li>
             )
