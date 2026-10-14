@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { JeuPhotos, Pret, SyncData, Vehicule } from '../shared/types'
+import type { Pret, SyncData, Vehicule } from '../shared/types'
 import { api, ApiError, errorText, getToken, setToken } from './api'
 import { Board } from './Board'
 import { Login } from './Login'
@@ -288,14 +288,12 @@ function Garage({ onLogout }: { onLogout: () => void }) {
     change(setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, ...patch } : x))), () => envoyer('/prets/' + p.id, 'PUT', patch), { msg: 'Prêt modifié' })
   }
 
-  // « retour » : jauge et état de la voiture photographiés au retour, à comparer avec le départ
-  function rendue(p: Pret, v: Vehicule, retour?: JeuPhotos) {
+  function rendue(p: Pret, v: Vehicule) {
     const at = new Date().toISOString()
-    const photos = retour && Object.keys(retour).length ? retour : undefined
     buzz()
     change(
-      setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at, ...(photos ? { photos: { ...x.photos, retour: photos } } : {}) } : x))),
-      () => envoyer(`/prets/${p.id}/retour`, 'POST', { at, photos }),
+      setPrets((ps) => ps.map((x) => (x.id === p.id ? { ...x, retour: at } : x))),
+      () => envoyer(`/prets/${p.id}/retour`, 'POST', { at }),
       {
         msg: `${v.nom} rendue`,
         undo: () =>
@@ -372,7 +370,7 @@ function Garage({ onLogout }: { onLogout: () => void }) {
           p={p}
           hist={hist}
           onClose={close}
-          onRendue={(retour) => rendue(p, v, retour)}
+          onRendue={() => rendue(p, v)}
           onModifier={() => setSheet({ kind: 'preter', vid: v.id, pid: p.id })}
           onHistorique={() => {
             chercherDansHistorique(v.immat || v.nom)

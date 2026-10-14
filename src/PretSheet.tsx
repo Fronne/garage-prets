@@ -160,7 +160,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
                 Note
               </button>
             </div>
-            {/* Photos : le permis du client (recto, verso ou un seul des deux), la jauge et l'état de la voiture pour comparer au retour */}
+            {/* Photos : le permis du client (recto, verso ou un seul des deux), la jauge de carburant et l'état de la voiture, à regarder au retour */}
             <div className="opts suite" role="group" aria-label="Photos, facultatif">
               <button type="button" className={'opt' + (nPermis ? ' done' : '')} aria-expanded={d.open === 'permis'} onClick={() => toggle('permis')}>
                 <IdCard />
@@ -215,7 +215,7 @@ export function PretSheet({ v, pret, draft, recents, onClose, onSubmit, onEditVe
             )}
             {d.open === 'photos' && (
               <>
-                <div className="sub">Jauge et état de la voiture au départ</div>
+                <div className="sub">Jauge de carburant et état de la voiture au départ</div>
                 <GrillePhotos cles={ETAT} jeu={d.photos} onChange={(photos) => set({ photos })} onErreur={setErrPhoto} />
               </>
             )}

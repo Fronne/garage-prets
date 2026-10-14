@@ -10,9 +10,8 @@ export const PERMIS: [PhotoCle, string][] = [
   ['permis_recto', 'Recto'],
   ['permis_verso', 'Verso'],
 ]
-// Mêmes emplacements au départ et au retour : chaque photo du retour se compare à celle du départ prise au même endroit
 export const ETAT: [PhotoCle, string][] = [
-  ['jauge', 'Jauge'],
+  ['jauge', 'Jauge carburant'],
   ['avant', 'Avant'],
   ['arriere', 'Arrière'],
   ['gauche', 'Côté gauche'],
@@ -65,7 +64,7 @@ export async function prendrePhoto(file: File, onErreur: (msg: string) => void):
 
 type Vue = { label: string; id: string }[]
 
-// Une photo en grand, ou deux l'une sous l'autre (départ et retour) pour voir les différences. Toucher ferme.
+// Une photo en grand. Toucher ferme.
 function Visionneuse({ vue, onClose }: { vue: Vue; onClose: () => void }) {
   const fermer = useRef(onClose)
   fermer.current = onClose
@@ -158,7 +157,7 @@ function Case({ label, id, onPrendre, onRetirer, onVoir }: CaseProps) {
     <span className="case pleine">
       <button type="button" className="case-img" onClick={onVoir} aria-label={'Voir ' + label}>
         {url && <img src={url} alt="" />}
-        {onPrendre && <span className="case-l">{label}</span>}
+        <span className="case-l">{label}</span>
       </button>
       {onRetirer && (
         <button type="button" className="case-x" onClick={onRetirer} aria-label={'Retirer la photo ' + label}>
@@ -205,87 +204,37 @@ export function GrillePhotos({ cles, jeu, onChange, onErreur }: GrilleProps) {
   )
 }
 
-type ComparerProps = {
+type VoirProps = {
   photos: PhotosPret | null | undefined
   /** Seulement le permis, ou seulement la jauge et l'état ; les deux par défaut */
   partie?: 'permis' | 'etat'
-  /** Fiche d'une voiture dehors : on remplit les photos du retour */
-  retour?: JeuPhotos
-  onRetour?: (jeu: JeuPhotos) => void
-  onErreur?: (msg: string) => void
 }
 
-// Permis du client, puis jauge et état de la voiture : départ à gauche, retour à droite. Toucher une ligne montre les deux en grand.
-export function ComparerPhotos({ photos, partie, retour, onRetour, onErreur = () => {} }: ComparerProps) {
+// Photos d'un prêt, à regarder : le permis du client, puis la jauge et l'état de la voiture au départ. Toucher une photo l'affiche en grand.
+export function VoirPhotos({ photos, partie }: VoirProps) {
   const [vue, setVue] = useState<Vue | null>(null)
   const dep = photos?.depart ?? {}
-  const ret = retour ?? photos?.retour ?? {}
-  const dernier = useRef(ret)
-  dernier.current = ret
-  const permis = partie === 'etat' ? [] : PERMIS.filter(([k]) => dep[k])
-  // En lecture, seulement les lignes où il y a une photo
-  const lignes = partie === 'permis' ? [] : ETAT.filter(([k]) => onRetour || dep[k] || ret[k])
-  const voirLigne = (k: PhotoCle, label: string) =>
-    setVue([
-      ...(dep[k] ? [{ label: label + ' au départ', id: dep[k]! }] : []),
-      ...(ret[k] ? [{ label: label + ' au retour', id: ret[k]! }] : []),
-    ])
-  return (
-    <div className="cmp-bloc">
-      {permis.length > 0 && (
-        <>
-          <div className="sub">Permis</div>
-          <div className="cases deux">
-            {permis.map(([k, label]) => (
-              <Case key={k} label={'Permis ' + label.toLowerCase()} id={dep[k]} onVoir={() => setVue([{ label: 'Permis, ' + label.toLowerCase(), id: dep[k]! }])} />
-            ))}
-          </div>
-        </>
-      )}
-      {lignes.length > 0 && (
-        <div className="cmp" role="table" aria-label="État de la voiture au départ et au retour">
-          <div role="row" className="cmp-h">
-            <span role="columnheader" />
-            <span role="columnheader" className="sub">
-              Départ
-            </span>
-            <span role="columnheader" className="sub">
-              Retour
-            </span>
-          </div>
-          {lignes.map(([k, label]) => (
-            <div role="row" key={k}>
-              <span role="rowheader" className="cmp-l">
-                {label}
-              </span>
-              <span role="cell">
-                <Case label={label} id={dep[k]} onVoir={() => voirLigne(k, label)} />
-              </span>
-              <span role="cell">
-                <Case
-                  label={label}
-                  id={ret[k]}
-                  onVoir={() => voirLigne(k, label)}
-                  onPrendre={
-                    onRetour &&
-                    ((f) =>
-                      prendrePhoto(f, onErreur)
-                        .then((id) => onRetour({ ...dernier.current, [k]: id }))
-                        .catch(() => onErreur("La photo n'a pas pu être lue. Réessaie.")))
-                  }
-                  onRetirer={
-                    onRetour &&
-                    (() => {
-                      const { [k]: _, ...reste } = dernier.current
-                      onRetour(reste)
-                    })
-                  }
-                />
-              </span>
-            </div>
+  // On ne prend plus de photos au retour, mais les rares prêts qui en ont les gardent dans l'Historique
+  const ret = photos?.retour ?? {}
+  const permis: [PhotoCle, string][] = partie === 'etat' ? [] : PERMIS.filter(([k]) => dep[k]).map(([k, l]) => [k, 'Permis ' + l.toLowerCase()])
+  const etat = partie === 'permis' ? [] : ETAT.filter(([k]) => dep[k])
+  const etatRetour = partie === 'permis' ? [] : ETAT.filter(([k]) => ret[k])
+  const grille = (titre: string, cles: [PhotoCle, string][], jeu: JeuPhotos, suffixe: string) =>
+    cles.length > 0 && (
+      <>
+        <div className="sub">{titre}</div>
+        <div className={'cases' + (cles.length === 2 ? ' deux' : '')}>
+          {cles.map(([k, label]) => (
+            <Case key={k} label={label} id={jeu[k]} onVoir={() => setVue([{ label: label + suffixe, id: jeu[k]! }])} />
           ))}
         </div>
-      )}
+      </>
+    )
+  return (
+    <div className="cmp-bloc">
+      {grille('Permis', permis, dep, '')}
+      {grille('Jauge et état au départ', etat, dep, ' au départ')}
+      {grille('Au retour', etatRetour, ret, ' au retour')}
       {vue && <Visionneuse vue={vue} onClose={() => setVue(null)} />}
     </div>
   )

@@ -377,11 +377,7 @@ html.fige, html.fige body { overflow: hidden }
 .case-l { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 8px 5px; background: linear-gradient(transparent, color-mix(in srgb, var(--ink) 80%, transparent)); color: var(--on-cta); font-size: 0.75rem; font-weight: 700; text-align: left }
 .case-x { position: absolute; top: -6px; right: -6px; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--surface); background: var(--ink); color: var(--on-cta); display: flex; align-items: center; justify-content: center; cursor: pointer }
 .case-x::after { content: ''; position: absolute; inset: -7px }
-.cmp-bloc, .cmp { display: flex; flex-direction: column; gap: 8px }
-.cmp > div { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center }
-.cmp-h .sub { text-align: center }
-.cmp-l { font-size: 0.8125rem; font-weight: 700; color: var(--slate); line-height: 1.25 }
-.cmp .prendre span, .cmp .case-l { display: none }
+.cmp-bloc { display: flex; flex-direction: column; gap: 8px }
 .h-photos { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; min-height: 40px; font-size: 0.875rem }
 /* Photo en grand : une seule, ou départ et retour l'une sous l'autre */
 .vue { position: fixed; inset: 0; z-index: 30; background: var(--vue); display: flex; flex-direction: column; gap: 12px; padding: calc(60px + env(safe-area-inset-top, 0px)) 8px calc(12px + env(safe-area-inset-bottom, 0px)); cursor: zoom-out; animation: fondu 160ms ease-out }

@@ -5,7 +5,7 @@ import { Avatar } from './Board'
 import { DatePicker } from './DatePicker'
 import { Cam, Phone, Plate, X } from './icons'
 import { Logo } from './Logo'
-import { ComparerPhotos, aDesPhotos } from './Photos'
+import { VoirPhotos, aDesPhotos } from './Photos'
 import { dayStr, telHref } from './util'
 
 // Date et heure, avec l'année seulement si ce n'est pas l'année en cours
@@ -207,7 +207,7 @@ export function Historique({ moi, onMoi }: { moi: string; onMoi: () => void }) {
                         <Cam />
                         {ouvert === r.id ? 'Cacher le permis et les photos' : 'Permis et photos'}
                       </button>
-                      {ouvert === r.id && <ComparerPhotos photos={r.photos} />}
+                      {ouvert === r.id && <VoirPhotos photos={r.photos} />}
                     </>
                   )}
                 </div>
