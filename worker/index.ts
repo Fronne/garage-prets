@@ -13,6 +13,8 @@ const MAX_PHOTO = 1_500_000
 // Après le retour : les photos de la voiture (jauge, vues, dégâts) servent de preuve 30 jours, le permis 1 an (RGPD : pas plus que nécessaire)
 const GARDER_VOITURE_JOURS = 30
 const GARDER_PERMIS_JOURS = 365
+// Nom, téléphone et note du client : effacés un an après le retour (l'historique garde la voiture, les dates et la plaque)
+const GARDER_IDENTITE_JOURS = 365
 // Une photo envoyée qu'aucun prêt n'utilise (reprise, retirée, prêt annulé ou abandonné) est effacée au bout de 2 jours
 const ORPHELINE_JOURS = 2
 
@@ -84,6 +86,16 @@ function heureTel(v: unknown, auPlusTot?: string): string {
 
 const app = new Hono<App>()
 
+// En-têtes de sécurité sur toutes les réponses ; l'API (clients, photos de permis) ne doit jamais rester dans un cache
+app.use('*', async (c, next) => {
+  await next()
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('X-Frame-Options', 'DENY')
+  c.header('Referrer-Policy', 'no-referrer')
+  c.header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  if (c.req.path.startsWith('/api/')) c.header('Cache-Control', 'private, no-store')
+})
+
 app.onError((err, c) => {
   if (err instanceof HttpError) return c.json({ error: err.message }, err.status as any)
   console.error(err)
@@ -103,22 +115,30 @@ async function addEquipe(env: Env, equipe: string[], prenom: string) {
     .run()
 }
 
-app.post('/api/login', async (c) => {
-  const env = c.env
-  if (!env.GARAGE_CODE) throw new HttpError(500, "Le code du garage n'est pas configuré sur le serveur.")
-  const b = await c.req.json().catch(() => ({}))
-
-  // Frein contre les essais de code en série
+// Frein contre les essais de code ou de clé en série (un seul compteur pour les deux connexions).
+// Rend la fonction à appeler quand l'essai est faux.
+async function freinEssais(env: Env) {
   const bucket = 'login_fails:' + Math.floor(Date.now() / LOGIN_WINDOW_MS)
   const fails = await env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(bucket).first<string>('value')
   if (Number(fails ?? 0) >= MAX_LOGIN_FAILS) throw new HttpError(429, 'Trop de tentatives. Réessaie dans quelques minutes.')
-  if (!(await codeMatches(env, String(b.code ?? '')))) {
+  return async () => {
     await env.DB.batch([
       env.DB.prepare("DELETE FROM meta WHERE key LIKE 'login_fails:%' AND key != ?").bind(bucket),
       env.DB.prepare(
         "INSERT INTO meta (key, value) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value = CAST(value AS INTEGER) + 1",
       ).bind(bucket),
     ])
+  }
+}
+
+app.post('/api/login', async (c) => {
+  const env = c.env
+  if (!env.GARAGE_CODE) throw new HttpError(500, "Le code du garage n'est pas configuré sur le serveur.")
+  const b = await c.req.json().catch(() => ({}))
+
+  const echec = await freinEssais(env)
+  if (!(await codeMatches(env, String(b.code ?? '')))) {
+    await echec()
     throw new HttpError(401, 'Code incorrect.')
   }
 
@@ -132,7 +152,11 @@ app.post('/api/login', async (c) => {
 app.post('/api/login-appli', async (c) => {
   const env = c.env
   const b = await c.req.json().catch(() => ({}))
-  if (!(await appKeyMatches(env, String(b.cle ?? '')))) throw new HttpError(401, 'Appli non reconnue.')
+  const echec = await freinEssais(env)
+  if (!(await appKeyMatches(env, String(b.cle ?? '')))) {
+    await echec()
+    throw new HttpError(401, 'Appli non reconnue.')
+  }
   const equipe = await getEquipe(env)
   const prenom = text(b.prenom, 30)
   // Sans prénom : on renvoie seulement la liste de l'équipe
@@ -359,7 +383,7 @@ app.get('/api/photos/:id', async (c) => {
   if (!data) throw new HttpError(404, 'Photo introuvable.')
   const bin = atob(data.slice(data.indexOf(',') + 1))
   return new Response(Uint8Array.from(bin, (ch) => ch.charCodeAt(0)), {
-    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, max-age=31536000, immutable' },
+    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, no-store' },
   })
 })
 
@@ -371,24 +395,29 @@ app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw))
 
 const ilYa = (jours: number) => new Date(Date.now() - jours * 86_400_000).toISOString()
 
-// Ménage des photos, chaque nuit. Après le retour, les photos de la voiture partent au bout de 30 jours (seul le permis reste),
-// le permis au bout d'1 an. Puis toute photo qu'aucun prêt n'utilise plus est effacée de la base.
+// Ménage de la nuit. Après le retour, les photos de la voiture partent au bout de 30 jours (seul le permis reste),
+// le permis au bout d'1 an (compté depuis le départ si la voiture n'est jamais revenue). Un an après le retour, le nom, le téléphone
+// et la note du client sont effacés. Puis toute photo qu'aucun prêt n'utilise plus est effacée de la base.
 async function menagePhotos(env: Env) {
   const voiture = [...CLES_VOITURE, 'degats'].map((k) => `json_extract(photos, '$.depart.${k}') IS NOT NULL`).join(' OR ')
   const finPermis = ilYa(GARDER_PERMIS_JOURS)
   const { results } = await env.DB.prepare(
-    `SELECT id, retour, photos FROM prets
-     WHERE retour IS NOT NULL AND photos IS NOT NULL AND (retour < ? OR (retour < ? AND (${voiture})))
+    `SELECT id, depart, retour, photos FROM prets
+     WHERE photos IS NOT NULL AND (COALESCE(retour, depart) < ? OR (retour IS NOT NULL AND retour < ? AND (${voiture})))
      LIMIT 200`,
   )
     .bind(finPermis, ilYa(GARDER_VOITURE_JOURS))
-    .all<{ id: string; retour: string; photos: string }>()
+    .all<{ id: string; depart: string; retour: string | null; photos: string }>()
   const maj = results.map((r) => {
-    const permis = r.retour < finPermis ? undefined : jeuPhotos(lirePhotos(r.photos)?.depart, CLES_PERMIS)
+    const permis = (r.retour ?? r.depart) < finPermis ? undefined : jeuPhotos(lirePhotos(r.photos)?.depart, CLES_PERMIS)
     return env.DB.prepare('UPDATE prets SET photos = ? WHERE id = ?').bind(permis ? JSON.stringify({ depart: permis }) : null, r.id)
   })
   await env.DB.batch([
     ...maj,
+    env.DB.prepare(
+      `UPDATE prets SET client = 'Client effacé', tel = NULL, note = NULL
+       WHERE retour IS NOT NULL AND retour < ? AND (client != 'Client effacé' OR tel IS NOT NULL OR note IS NOT NULL)`,
+    ).bind(ilYa(GARDER_IDENTITE_JOURS)),
     // Les identifiants sont des UUID : les chercher dans le texte des photos d'un prêt suffit
     env.DB.prepare(
       `DELETE FROM photos WHERE cree_le < ?

@@ -3,6 +3,14 @@ import { b64url, fromB64url, type Env } from './env'
 const enc = new TextEncoder()
 const dec = new TextDecoder()
 
+// Comparaison sans raccourci : le temps de réponse ne dit pas combien de caractères sont justes
+function egal(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let d = 0
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return d === 0
+}
+
 async function hmac(secret: string, data: string): Promise<string> {
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   return b64url(await crypto.subtle.sign('HMAC', key, enc.encode(data)))
@@ -32,7 +40,7 @@ export async function verifyToken(env: Env, token: string): Promise<string | nul
   const i = token.indexOf('.')
   if (i < 1) return null
   const id = token.slice(0, i)
-  if (token.slice(i + 1) !== (await hmac(env.GARAGE_CODE, 'prenom:' + id))) return null
+  if (!egal(token.slice(i + 1), await hmac(env.GARAGE_CODE, 'prenom:' + id))) return null
   try {
     return dec.decode(fromB64url(id))
   } catch {
